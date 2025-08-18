@@ -368,7 +368,14 @@ export default function Landing() {
 
       {/* Modals */}
       <SignupModal open={activeModal === 'signup'} onOpenChange={closeModal} />
-      <InvoiceUploadModal open={activeModal === 'invoice'} onOpenChange={(open) => !open && closeModal()} />
+      <InvoiceUploadModal 
+        open={activeModal === 'invoice'} 
+        onOpenChange={(open) => !open && closeModal()} 
+        onUploadComplete={() => {
+          console.log('🔄 Invoice uploaded from landing page');
+          // Note: Landing page doesn't have credit score hook, so no refresh needed here
+        }}
+      />
       <LoanDiscoveryModal open={activeModal === 'loans'} onOpenChange={closeModal} />
       <EscrowModal open={activeModal === 'escrow'} onOpenChange={(open) => !open && closeModal()} />
       <MarketplaceModal open={activeModal === 'marketplace'} onOpenChange={closeModal} />

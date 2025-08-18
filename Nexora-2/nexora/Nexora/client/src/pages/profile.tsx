@@ -2,6 +2,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useCreditScore } from '@/hooks/use-credit-score';
+import { useCreditScoreImprovement } from '@/hooks/use-credit-improvement';
 
 import { 
   Crown,
@@ -27,6 +29,10 @@ export default function Profile() {
     learningProgress,
     learningCourses
   } = useDummyData();
+  
+  // Get real credit score data
+  const { creditScore, category, totalInvoices } = useCreditScore();
+  const { improvement, message } = useCreditScoreImprovement();
 
   const formatCurrency = (amount: string | number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -137,24 +143,24 @@ export default function Profile() {
             <Card className="p-6">
               <h4 className="text-lg font-semibold mb-4">Credit Score</h4>
               <div className="text-center">
-                <div className="text-4xl font-bold text-green-accent mb-2">{businessProfile.creditScore}</div>
-                <div className="text-sm text-muted-foreground mb-4">Excellent Rating</div>
+                <div className="text-4xl font-bold text-green-accent mb-2">{creditScore}</div>
+                <div className="text-sm text-muted-foreground mb-4">{category} Rating</div>
                 <div className="w-full bg-muted rounded-full h-3">
                   <div 
                     className="bg-gradient-to-r from-orange-accent via-teal-accent to-green-accent h-3 rounded-full transition-all duration-500" 
-                    style={{ width: '85%' }}
+                    style={{ width: `${Math.min(100, (creditScore / 100) * 100)}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>300</span>
-                  <span>850</span>
+                  <span>0</span>
+                  <span>100</span>
                 </div>
               </div>
               
               <div className="mt-4 p-3 bg-green-accent/20 border border-green-accent rounded-lg">
                 <div className="text-sm text-green-accent">
                   <TrendingUp className="w-4 h-4 mr-1 inline" />
-                  +45 points this month! Your consistent payments and business growth are paying off.
+                  {improvement > 0 ? `+${improvement} points this month! ` : ''}{message}
                 </div>
               </div>
             </Card>

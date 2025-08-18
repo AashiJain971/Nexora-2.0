@@ -28,7 +28,7 @@ export function useDummyData() {
       formData.append("image", file);
 
       // Step 1: Extract invoice information
-      const extractRes = await fetch("http://localhost:8000/extract-invoice", {
+      const extractRes = await fetch("http://localhost:8001/extract-invoice", {
         method: "POST",
         body: formData,
       });

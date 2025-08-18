@@ -9,7 +9,7 @@ export const dummyBusinessProfile = {
   employees: 12,
   annualRevenue: "5000000",
   walletAddress: "0x1234567890abcdef",
-  creditScore: 785,
+  // creditScore removed - now fetched from API
   isVerified: true,
 };
 

@@ -20,11 +20,13 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     payment_terms VARCHAR(255),
     industry VARCHAR(255),
     total_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
-    currency VARCHAR(10) DEFAULT 'INR',
+    currency VARCHAR(20) DEFAULT 'INR',
     tax_amount DECIMAL(15,2) DEFAULT 0,
     extra_charges DECIMAL(15,2) DEFAULT 0,
     line_items JSONB,
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'paid', 'overdue'
+    credit_score DECIMAL(5,2) DEFAULT NULL, -- Store individual invoice credit score
+    credit_score_data JSONB DEFAULT NULL, -- Store complete credit score analysis
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     payment_date DATE,

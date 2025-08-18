@@ -105,7 +105,6 @@ async def calculate_credit_score_api(financial_data: FinancialData):
         # Propagate HTTPExceptions
         raise
     except Exception as e:
-        print("Exception during credit score calculation:", repr(e))
         raise HTTPException(status_code=500, detail=f"Internal calculation error: {str(e)}")
 
 
@@ -148,25 +147,4 @@ def root():
         }
     }
 
-
-@app.post("/upload-invoice/")
-async def upload_invoice(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        # Assuming you have a function to parse invoice image and calculate credit score
-        # Example: parse_image_invoice -> returns financial_dict
-        financial_dict = parse_image_invoice(contents)
-
-        GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-        if not GROQ_API_KEY:
-            raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
-
-        # Call your existing main function with parsed data
-        result_json = calculate_credit_score_main(financial_dict, GROQ_API_KEY)
-        result_dict = json.loads(result_json)
-
-        return result_dict
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing invoice: {str(e)}")
 

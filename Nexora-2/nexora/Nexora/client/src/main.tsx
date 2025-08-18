@@ -7,7 +7,7 @@ import "./index.css";
 async function testBackendConnections() {
   // Test Invoice API (GET /)
   try {
-    const invoiceRes = await fetch("http://localhost:8000/");
+    const invoiceRes = await fetch("http://localhost:8001/");
     const invoiceData = await invoiceRes.json();
     console.log("✅ Invoice API connection OK:", invoiceData);
   } catch (err) {

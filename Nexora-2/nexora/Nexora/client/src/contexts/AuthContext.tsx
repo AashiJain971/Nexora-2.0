@@ -12,6 +12,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
+  refreshToken: () => Promise<string | null>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -34,14 +35,135 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(userData);
+        console.log('🔐 Restored user session:', userData.email);
+        
+        // Verify token is still valid by testing it
+        verifyTokenAndRefresh(storedToken);
       } catch (error) {
         // Clear invalid data
         localStorage.removeItem('nexora_token');
         localStorage.removeItem('nexora_user');
+        console.log('🔐 Cleared invalid auth data');
+        createDemoUser();
       }
+    } else {
+      // For development: Auto-register a demo user if no authentication exists
+      console.log('🔐 No existing auth found, creating demo user...');
+      createDemoUser();
     }
     setIsLoading(false);
   }, []);
+
+  const verifyTokenAndRefresh = async (currentToken: string) => {
+    try {
+      // Test the token by making a simple API call
+      const response = await fetch('http://localhost:8001/', {
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+        },
+      });
+      
+      // If the API is not available or token is expired, refresh it
+      if (!response.ok && (response.status === 401 || response.status === 403)) {
+        console.log('🔄 Token expired or invalid, refreshing...');
+        await refreshToken();
+      }
+    } catch (error) {
+      console.log('🔄 Could not verify token, refreshing...');
+      await refreshToken();
+    }
+  };
+
+  const createDemoUser = async () => {
+    try {
+      // Check if user already exists by trying login first
+      console.log('🔐 Attempting demo user authentication...');
+      
+      const loginResponse = await fetch('http://localhost:8001/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'demo@nexora.com',
+          password: 'demo123',
+        }),
+      });
+
+      if (loginResponse.ok) {
+        const loginResult = await loginResponse.json();
+        setToken(loginResult.access_token);
+        setUser(loginResult.user_data);
+        localStorage.setItem('nexora_token', loginResult.access_token);
+        localStorage.setItem('nexora_user', JSON.stringify(loginResult.user_data));
+        console.log('✅ Demo user authenticated successfully:', loginResult.user_data);
+        return;
+      }
+
+      // If login fails, try to register new demo user
+      console.log('🆕 Demo user not found, creating new user...');
+      const response = await fetch('http://localhost:8001/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          full_name: 'Demo User',
+          email: 'demo@nexora.com',
+          password: 'demo123',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setToken(result.access_token);
+        setUser(result.user_data);
+        localStorage.setItem('nexora_token', result.access_token);
+        localStorage.setItem('nexora_user', JSON.stringify(result.user_data));
+        console.log('✅ Demo user created and authenticated:', result.user_data);
+      } else {
+        console.warn('⚠️ Demo user registration failed, but login should have worked');
+        console.warn('Registration error:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error with demo user authentication:', error);
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      console.log('🔄 Refreshing authentication token...');
+      const loginResponse = await fetch('http://localhost:8001/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'demo@nexora.com',
+          password: 'demo123',
+        }),
+      });
+
+      if (loginResponse.ok) {
+        const loginResult = await loginResponse.json();
+        setToken(loginResult.access_token);
+        setUser(loginResult.user_data);
+        localStorage.setItem('nexora_token', loginResult.access_token);
+        localStorage.setItem('nexora_user', JSON.stringify(loginResult.user_data));
+        console.log('✅ Token refreshed successfully');
+        return loginResult.access_token;
+      } else {
+        console.error('❌ Failed to refresh token');
+        logout();
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing token:', error);
+      logout();
+      return null;
+    }
+  };
 
   const login = (newToken: string, userData: User) => {
     setToken(newToken);
@@ -63,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     login,
     logout,
+    refreshToken,
     isAuthenticated: !!token && !!user,
     isLoading,
   };

@@ -6,8 +6,11 @@ import { Progress } from '@/components/ui/progress';
 
 import { LearningModal } from '@/components/features/learning-modal';
 import { InvoiceUploadModal } from '@/components/features/invoice-upload-modal';
+import { InvoiceManagementModal } from '@/components/features/invoice-management-modal';
 import { LoanDiscoveryModal } from '@/components/features/loan-discovery-modal';
 import { MarketplaceModal } from '@/components/features/marketplace-modal';
+import { useCreditScore } from '@/hooks/use-credit-score';
+import { useAIInsights } from '@/hooks/use-ai-insights';
 import { 
   TrendingUp, 
   CreditCard, 
@@ -24,7 +27,9 @@ import {
   AlertCircle,
   Lightbulb,
   Users,
-  ChartLine
+  ChartLine,
+  Loader2,
+  Brain
 } from 'lucide-react';
 import { useDummyData } from '@/hooks/use-dummy-data';
 import { Link } from 'wouter';
@@ -38,6 +43,12 @@ export default function Dashboard() {
     orders,
     getRandomAIResponse 
   } = useDummyData();
+
+  // Get real credit score data
+  const { creditScore, category, lastUpdated, totalInvoices, loading: creditLoading, refreshCreditScore } = useCreditScore();
+  
+  // Get dynamic AI insights based on credit score
+  const aiInsights = useAIInsights();
 
   const openModal = (modalName: string) => setActiveModal(modalName);
   const closeModal = () => setActiveModal(null);
@@ -70,6 +81,15 @@ export default function Dashboard() {
             <Button className="bg-gradient-to-r from-teal-accent to-green-accent">
               Export Report
             </Button>
+            <Button 
+              onClick={() => {
+                console.log('🔘 MAIN Dashboard Invoice Management button clicked!');
+                openModal('invoiceManagement');
+              }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              📋 View Invoice History
+            </Button>
           </div>
         </div>
 
@@ -77,11 +97,43 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Credit Score</h3>
-              <TrendingUp className="w-5 h-5 text-green-accent" />
+              <h3 className="text-lg font-semibold">Total Credibility Score</h3>
+              {creditLoading ? (
+                <Loader2 className="w-5 h-5 text-blue-accent animate-spin" />
+              ) : (
+                <TrendingUp className="w-5 h-5 text-green-accent" />
+              )}
             </div>
-            <div className="text-3xl font-bold text-green-accent mb-2">{businessProfile.creditScore}</div>
-            <div className="text-sm text-muted-foreground">Excellent (+45 this month)</div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="text-3xl font-bold text-green-accent">{creditScore}</div>
+              <Badge variant="outline" className="text-xs">
+                {category}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  console.log('🔄 Refreshing credit score...');
+                  refreshCreditScore();
+                }}
+                className="h-6 w-6 p-0 ml-2"
+                title="Refresh Credit Score"
+              >
+                <Activity className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Based on {totalInvoices} invoice{totalInvoices !== 1 ? 's' : ''}
+              {lastUpdated && ` • Updated: ${lastUpdated}`}
+            </div>
+            
+            {/* Temporary debugging info - TODO: Remove in production */}
+            <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-xs">
+              <div className="font-semibold mb-1 text-slate-800 dark:text-slate-200">🐛 Debug Info:</div>
+              <div className="text-slate-700 dark:text-slate-300">Score: {creditScore} | Category: {category}</div>
+              <div className="text-slate-700 dark:text-slate-300">Total Invoices: {totalInvoices} | Loading: {creditLoading ? 'Yes' : 'No'}</div>
+              <div className="text-slate-700 dark:text-slate-300">Last Updated: {lastUpdated}</div>
+            </div>
           </Card>
           
           <Card className="p-6">
@@ -281,6 +333,19 @@ export default function Dashboard() {
                   Upload Invoice
                 </Button>
                 <Button 
+                  onClick={() => {
+                    console.log('🔘 Invoice Management button clicked!');
+                    console.log('Current activeModal:', activeModal);
+                    openModal('invoiceManagement');
+                    console.log('New activeModal should be: invoiceManagement');
+                  }}
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-muted bg-blue-50 border border-blue-200"
+                >
+                  <FileText className="w-5 h-5 mr-3 text-blue-600" />
+                  📋 Invoice Management (VIEW HISTORY)
+                </Button>
+                <Button 
                   onClick={() => openModal('loans')}
                   variant="ghost" 
                   className="w-full justify-start hover:bg-muted"
@@ -354,24 +419,31 @@ export default function Dashboard() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">AI Insights</h3>
               <div className="space-y-3">
-                <div className="p-3 bg-teal-accent/20 border border-teal-accent rounded-lg">
-                  <div className="text-sm text-teal-accent">
-                    <Lightbulb className="w-4 h-4 mr-1 inline" />
-                    Your credit score improved by 45 points this month! Consider applying for larger loans.
+                {aiInsights.map((insight) => {
+                  const IconComponent = insight.icon === 'Lightbulb' ? Lightbulb :
+                                      insight.icon === 'ChartLine' ? ChartLine :
+                                      insight.icon === 'Users' ? Users : TrendingUp;
+                  
+                  return (
+                    <div 
+                      key={insight.id}
+                      className={`p-3 bg-${insight.color}-accent/20 border border-${insight.color}-accent rounded-lg`}
+                    >
+                      <div className={`text-sm text-${insight.color}-accent`}>
+                        <IconComponent className="w-4 h-4 mr-1 inline" />
+                        {insight.message}
+                      </div>
+                    </div>
+                  );
+                })}
+                {aiInsights.length === 0 && (
+                  <div className="p-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <Brain className="w-4 h-4 mr-1 inline" />
+                      Upload invoices to get personalized AI insights!
+                    </div>
                   </div>
-                </div>
-                <div className="p-3 bg-orange-accent/20 border border-orange-accent rounded-lg">
-                  <div className="text-sm text-orange-accent">
-                    <ChartLine className="w-4 h-4 mr-1 inline" />
-                    Revenue increased 18% - perfect time to expand your product line.
-                  </div>
-                </div>
-                <div className="p-3 bg-green-accent/20 border border-green-accent rounded-lg">
-                  <div className="text-sm text-green-accent">
-                    <Users className="w-4 h-4 mr-1 inline" />
-                    3 new potential buyers matched for your products this week.
-                  </div>
-                </div>
+                )}
               </div>
             </Card>
 
@@ -382,7 +454,15 @@ export default function Dashboard() {
 
       {/* Modals */}
       <LearningModal open={activeModal === 'learning'} onOpenChange={closeModal} />
-      <InvoiceUploadModal open={activeModal === 'invoice'} onOpenChange={closeModal} />
+      <InvoiceUploadModal 
+        open={activeModal === 'invoice'} 
+        onOpenChange={closeModal} 
+        onUploadComplete={() => {
+          console.log('🔄 Invoice uploaded, refreshing dashboard credit score...');
+          refreshCreditScore();
+        }}
+      />
+      <InvoiceManagementModal open={activeModal === 'invoiceManagement'} onOpenChange={closeModal} />
       <LoanDiscoveryModal open={activeModal === 'loans'} onOpenChange={closeModal} />
       <MarketplaceModal open={activeModal === 'marketplace'} onOpenChange={closeModal} />
     </div>
