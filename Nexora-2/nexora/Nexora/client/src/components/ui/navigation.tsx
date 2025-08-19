@@ -14,6 +14,7 @@ export function Navigation() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/dashboard", label: "Dashboard" },
+    { href: "/policy-generator", label: "Policy Generator" },
     { href: "/profile", label: "Profile" },
   ];
 

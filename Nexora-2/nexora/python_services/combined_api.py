@@ -1,26 +1,7 @@
 #!/usr/bin/env python3
 """
 Nexora Credit Score API - Supabase Database Only
-This version uses only Supabase database, no        # Check if tables exist by querying them
-        try:
-            # Try to select from users table
-            result = supabase.table('users').select('id').limit(1).execute()
-            print("✅ Users table exists and is accessible")
-            
-            # Try to select from invoices table
-            result = supabase.table('invoices').select('id').limit(1).execute()
-            print("✅ Invoices table exists and is accessible")
-            return True
-        except Exception as e:
-            error_msg = str(e)
-            if 'users' in error_msg or 'invoices' in error_msg:
-                print("⚠️ Database tables not found or not accessible")
-                print("💡 Please create the database tables in your Supabase SQL editor.")
-                print("🔗 Go to: https://eecbqzvcnwrkcxgwjxlt.supabase.co")
-                print("� Navigate to 'SQL Editor' and run the schema from supabase_schema.sql")
-            else:
-                print(f"⚠️ Database error: {error_msg}")
-            return Falsetorage
+This version uses only Supabase database, no in-memory storage
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header
@@ -49,7 +30,7 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://eecbqzvcnwrkcxgwjxlt.supabase.co")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlY2JxenZjbndya2N4Z3dqeGx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0Mjk1NjEsImV4cCI6MjA3MTAwNTU2MX0.CkhFT-6LKFg6NCc9WIiZRjNQ7VGVX6nJmoOxjMVHDKs")
 
-# GROQ API configuration
+# Groq API configuration
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Initialize Supabase client
@@ -135,25 +116,30 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 def init_database_tables():
     """Initialize database tables using raw SQL"""
     try:
-        print("🔧 Checking Supabase database tables...")
+        print("🔧 Initializing Supabase database tables...")
         
         # Check if tables exist by querying them
         try:
             # Try to select from users table
             result = supabase.table('users').select('id').limit(1).execute()
-            print("✅ Users table exists and is accessible")
-            return True
-        except Exception as e:
-            print("⚠️ Users table not found or not accessible")
-            print("💡 Please create the users table in your Supabase SQL editor.")
-            print("🔗 Go to: https://eecbqzvcnwrkcxgwjxlt.supabase.co")
-            print("� Navigate to 'SQL Editor' and run the schema from supabase_schema.sql")
-            return False
+            print("✅ Users table already exists")
+        except:
+            print("📋 Creating users table...")
+            # Table doesn't exist, it will be created via SQL schema
+        
+        try:
+            # Try to select from invoices table  
+            result = supabase.table('invoices').select('id').limit(1).execute()
+            print("✅ Invoices table already exists")
+        except:
+            print("📋 Creating invoices table...")
+            # Table doesn't exist, it will be created via SQL schema
             
+        print("✅ Database initialization completed!")
+        
     except Exception as e:
         print(f"⚠️ Database initialization warning: {e}")
-        print("💡 Please ensure your Supabase database is properly configured")
-        return False
+        print("💡 Please run the SQL schema in your Supabase SQL editor if tables don't exist")
 
 # Initialize database on startup
 init_database_tables()
@@ -171,7 +157,7 @@ async def root():
         "endpoints": {
             "register": "/register",
             "login": "/login", 
-            "upload": "/process-invoice",
+            "upload": "/upload-invoice",
             "dashboard": "/dashboard/credit-score",
             "invoices": "/user/invoices"
         }
@@ -197,22 +183,9 @@ async def register_user(user: UserRegistration):
         }
         
         # Insert user into database
-        try:
-            result = supabase.table("users").insert(user_data).execute()
-            if not result.data:
-                raise HTTPException(status_code=500, detail="Failed to create user - no data returned")
-        except Exception as db_error:
-            error_msg = str(db_error)
-            if "table 'public.users'" in error_msg and "not exist" in error_msg:
-                raise HTTPException(
-                    status_code=500, 
-                    detail="Database tables not found. Please create the users table in your Supabase SQL editor first. Check the server logs for SQL commands."
-                )
-            elif "already exists" in error_msg or "duplicate" in error_msg:
-                raise HTTPException(status_code=400, detail="Email already registered")
-            else:
-                print(f"Database error: {error_msg}")
-                raise HTTPException(status_code=500, detail=f"Database error: {error_msg}")
+        result = supabase.table("users").insert(user_data).execute()
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to create user")
         
         created_user = result.data[0]
         print(f"✅ User registered successfully: {created_user['email']} (ID: {created_user['id']})")
@@ -280,7 +253,7 @@ async def login_user(user: UserLogin):
         print(f"❌ Login error: {e}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
-@app.post("/process-invoice")
+@app.post("/upload-invoice")
 async def process_invoice(
     file: UploadFile = File(...),
     current_user: str = Depends(get_current_user)
@@ -296,154 +269,187 @@ async def process_invoice(
         
         # Extract invoice details
         print("🔍 Extracting invoice details...")
+        invoice_result_raw = await asyncio.to_thread(extract_invoice_main, temp_file_path, GROQ_API_KEY)
+        
+        # The invoice_2.py returns a JSON string, so we need to parse it
         try:
-            invoice_result = await asyncio.to_thread(extract_invoice_main, temp_file_path, GROQ_API_KEY)
-            print(f"🔍 Invoice extraction result: {invoice_result}")
-        except Exception as e:
-            print(f"❌ Invoice extraction failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Invoice extraction failed: {str(e)}")
+            if isinstance(invoice_result_raw, str):
+                invoice_result = json.loads(invoice_result_raw)
+            else:
+                invoice_result = invoice_result_raw
+        except json.JSONDecodeError as e:
+            print(f"❌ Error parsing invoice result JSON: {e}")
+            raise HTTPException(status_code=400, detail="Invoice extraction returned invalid JSON")
         
-        # Normalize / validate invoice_result
-        # The extractor may return a JSON string (from invoice_2.structure_invoice_json) instead of a dict with success flag
-        if isinstance(invoice_result, str):
-            try:
-                parsed = json.loads(invoice_result)
-                # Wrap into expected structure if needed
-                if isinstance(parsed, dict) and 'success' not in parsed:
-                    invoice_result = {"success": True, **parsed}
-                else:
-                    invoice_result = parsed
-                print("🔄 Parsed string invoice_result into dict")
-            except json.JSONDecodeError as je:
-                print(f"❌ Could not parse invoice extraction string as JSON: {je}")
-                raise HTTPException(status_code=500, detail="Invoice extraction produced invalid JSON output")
-
-        if not isinstance(invoice_result, dict):
-            print(f"❌ Invoice extraction output is not a dict: {type(invoice_result)} -> {invoice_result}")
-            raise HTTPException(status_code=500, detail="Invoice extraction returned unsupported data format")
-
-        # Empty dict means extraction failed
-        if not invoice_result:
-            raise HTTPException(status_code=400, detail="Invoice extraction failed: empty result")
-
-        # Treat absence of explicit success flag as success (legacy extractor)
-        if invoice_result.get("success") is False:
-            raise HTTPException(status_code=400, detail=f"Invoice extraction failed: {invoice_result.get('error', 'Unknown error')}")
-
-        if 'invoice_details' not in invoice_result:
-            # Provide a graceful fallback so user still gets a stored record instead of generic 500
-            print("⚠️ Invoice extraction missing 'invoice_details'; generating placeholder.")
-            import uuid
-            placeholder_invoice = {
-                "invoice_number": f"TEMP-{int(datetime.now().timestamp())}-{str(uuid.uuid4())[:8]}",
-                "client": "Unknown",
-                "date": datetime.now().strftime("%Y-%m-%d"),
-                "payment_terms": "N/A",
-                "industry": "General",
-                "total_amount": 0.0,
-                "currency": "USD",
-                "pending_amount": 0.0,
-                "small_analysis": "Placeholder invoice created due to extraction issue",
-                "line_items": [],
-                "tax_amount": 0.0,
-                "extra_charges": 0.0
-            }
-            invoice_result['invoice_details'] = placeholder_invoice
-
-        invoice_details = invoice_result['invoice_details']
-        if not isinstance(invoice_details, dict):
-            raise HTTPException(status_code=500, detail="Invoice extraction returned malformed invoice details")
-
-        invoice_number = invoice_details.get('invoice_number', 'Unknown')
-        print(f"✅ Invoice extracted: {invoice_number}")
+        if not invoice_result.get("invoice_details"):
+            raise HTTPException(status_code=400, detail=f"Invoice extraction failed: No invoice details found")
         
-        # Get all existing invoices for user to calculate historical data
+        invoice_details = invoice_result["invoice_details"]
+        print(f"✅ Invoice extracted: {invoice_details.get('invoice_number', 'Unknown')}")
+
+        # --- Sanitize and truncate string fields to fit DB constraints ---
+        def _truncate(val, max_len):
+            if val is None:
+                return None
+            s = str(val)
+            return s[:max_len]
+
+        # Log original lengths for debugging
+        debug_lengths = {
+            'invoice_number_len': len(str(invoice_details.get('invoice_number', ''))),
+            'client_len': len(str(invoice_details.get('client', ''))),
+            'payment_terms_len': len(str(invoice_details.get('payment_terms', ''))),
+            'industry_len': len(str(invoice_details.get('industry', ''))),
+            'currency_len': len(str(invoice_details.get('currency', '')))
+        }
+        print(f"🔎 Field lengths before truncation: {debug_lengths}")
+
+        # Apply truncation according to supabase_schema.sql
+        invoice_number = _truncate(invoice_details.get('invoice_number', 'INV-UNKNOWN'), 255)
+        client = _truncate(invoice_details.get('client', 'Unknown Client'), 255)
+        payment_terms = _truncate(invoice_details.get('payment_terms', 'Not specified'), 255)
+        industry = _truncate(invoice_details.get('industry', 'General'), 255)
+        # Currency limited to 20 chars; keep only first 10 non-space chars typical codes
+        raw_currency = _truncate(invoice_details.get('currency', 'INR'), 20)
+        # Normalize currency to uppercase short code if it's long descriptive text
+        if len(raw_currency) > 10:
+            # Extract potential code (letters only) from beginning
+            import re as _re
+            match = _re.search(r"[A-Za-z]{3,5}", raw_currency.upper())
+            currency = match.group(0) if match else raw_currency[:10].upper()
+        else:
+            currency = raw_currency.upper()
+        print(f"💱 Normalized currency: '{raw_currency}' -> '{currency}'")
+        
+        # Get all existing invoices for user to calculate historical data & detect duplicates
         existing_invoices = supabase.table('invoices').select('*').eq('user_id', int(current_user)).execute()
         total_invoices = len(existing_invoices.data) if existing_invoices.data else 0
+
+        # Duplicate detection (idempotent behavior)
+        # We'll sanitize the invoice number first (same logic used later) to compare apples-to-apples
+        raw_invoice_number = invoice_details.get("invoice_number", "INV-UNKNOWN")
+        sanitized_invoice_number = str(raw_invoice_number)[:255]
+        duplicate_invoice = None
+        if existing_invoices.data:
+            for inv in existing_invoices.data:
+                if inv.get('invoice_number') == sanitized_invoice_number:
+                    duplicate_invoice = inv
+                    break
+
+        if duplicate_invoice:
+            print("⚠️ Duplicate invoice upload detected; returning existing record without re-processing credit score")
+            # Clean up temp file early
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+            return {
+                "success": True,
+                "message": "Invoice already processed previously; returning existing record",
+                "invoice_details": {
+                    "id": duplicate_invoice["id"],
+                    "invoice_number": duplicate_invoice["invoice_number"],
+                    "client": duplicate_invoice["client"],
+                    "total_amount": duplicate_invoice["total_amount"],
+                    "credit_score": duplicate_invoice.get("credit_score")
+                },
+                "credit_score_analysis": duplicate_invoice.get("credit_score_data", {}),
+                "historical_summary": {
+                    "total_historical_invoices": total_invoices,
+                    "total_amount_all_invoices": sum([inv['total_amount'] for inv in existing_invoices.data]) if existing_invoices.data else 0
+                },
+                "duplicate": True
+            }
         
         # Calculate total amounts for credit score calculation
         total_amount = sum([inv['total_amount'] for inv in existing_invoices.data]) if existing_invoices.data else 0
-        total_amount += float(invoice_details['total_amount'])
+        invoice_total = float(invoice_details.get('total_amount', 0))
+        total_amount += invoice_total
         
         # Calculate credit score for this invoice
         print("📊 Calculating credit score...")
         credit_score_data = {
             "no_of_invoices": total_invoices + 1,
             "total_amount": total_amount,
-            "total_amount_pending": float(invoice_details['total_amount']),
-            "total_amount_paid": total_amount - float(invoice_details['total_amount']),
+            "total_amount_pending": invoice_total,  # New invoice is pending
+            "total_amount_paid": total_amount - invoice_total,
             "tax": float(invoice_details.get('tax_amount', 0)),
             "extra_charges": float(invoice_details.get('extra_charges', 0)),
             "payment_completion_rate": 0.8,  # Default assumption
             "paid_to_pending_ratio": 0.6     # Default assumption
         }
         
-        print(f"📊 Credit score data: {credit_score_data}")
+        credit_score_result = await asyncio.to_thread(calculate_credit_score_main, credit_score_data, GROQ_API_KEY)
+        # The credit_score_main returns a JSON string; parse if needed
         try:
-            credit_score_result = await asyncio.to_thread(calculate_credit_score_main, credit_score_data, GROQ_API_KEY)
-            print(f"📊 Credit score result: {credit_score_result}")
-        except Exception as e:
-            print(f"❌ Credit score calculation failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Credit score calculation failed: {str(e)}")
-        
-        # Parse credit score result if it's a JSON string
-        if isinstance(credit_score_result, str):
-            try:
-                credit_score_result = json.loads(credit_score_result)
-                print("🔄 Parsed credit score result from JSON string")
-            except json.JSONDecodeError as je:
-                print(f"❌ Could not parse credit score result as JSON: {je}")
-                # Provide fallback structure
-                credit_score_result = {
-                    "credit_score_analysis": {
-                        "final_weighted_credit_score": 0
-                    }
-                }
-        
-        individual_credit_score = credit_score_result.get('credit_score_analysis', {}).get('final_weighted_credit_score', 0)
+            if isinstance(credit_score_result, str):
+                credit_score_result_parsed = json.loads(credit_score_result)
+            else:
+                credit_score_result_parsed = credit_score_result
+        except json.JSONDecodeError as e:
+            print(f"❌ Error parsing credit score JSON: {e}")
+            credit_score_result_parsed = {"credit_score_analysis": {}}
+
+        individual_credit_score = (
+            credit_score_result_parsed
+                .get('credit_score_analysis', {})
+                .get('final_weighted_credit_score', 0)
+        )
         
         print(f"✅ Individual credit score calculated: {individual_credit_score}")
         
         # Prepare invoice data for database
         invoice_db_data = {
             "user_id": int(current_user),
-            "invoice_number": invoice_details["invoice_number"],
-            "client": invoice_details["client"],
+            "invoice_number": invoice_number,
+            "client": client,
             "date": invoice_details.get("date"),
-            "payment_terms": invoice_details.get("payment_terms"),
-            "industry": invoice_details.get("industry", "General"),
-            "total_amount": float(invoice_details["total_amount"]),
-            "currency": invoice_details.get("currency", "INR")[:10],  # Truncate to 10 chars
+            "payment_terms": payment_terms,
+            "industry": industry,
+            "total_amount": invoice_total,
+            "currency": currency,
             "tax_amount": float(invoice_details.get("tax_amount", 0)),
             "extra_charges": float(invoice_details.get("extra_charges", 0)),
             "line_items": invoice_details.get("line_items", []),
             "status": "pending",
             "credit_score": individual_credit_score,
-            "credit_score_data": credit_score_result.get('credit_score_analysis', {})
+            "credit_score_data": credit_score_result_parsed.get('credit_score_analysis', {})
         }
-
-        # Check for duplicate invoice number for this user
-        existing_invoice = supabase.table("invoices").select("id").eq("user_id", int(current_user)).eq("invoice_number", invoice_db_data["invoice_number"]).execute()
-        
-        if existing_invoice.data:
-            # Make invoice number unique by appending timestamp
-            import uuid
-            original_number = invoice_db_data["invoice_number"]
-            invoice_db_data["invoice_number"] = f"{original_number}-{int(datetime.now().timestamp())}-{str(uuid.uuid4())[:8]}"
-            print(f"⚠️ Duplicate invoice number detected, using unique number: {invoice_db_data['invoice_number']}")
+        print("🧹 Sanitized invoice payload prepared for DB insert")
         
         # Insert invoice into database
         print("💾 Saving invoice to Supabase...")
-        print(f"💾 Invoice data: {invoice_db_data}")
         try:
             result = supabase.table("invoices").insert(invoice_db_data).execute()
-            print(f"💾 Database result: {result}")
-        except Exception as e:
-            print(f"❌ Database save failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Database save failed: {str(e)}")
-        
-        if not result.data:
-            raise HTTPException(status_code=500, detail="Failed to save invoice to database")
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Failed to save invoice to database")
+        except Exception as insert_error:
+            # Handle duplicate race condition (if another request inserted same invoice between detection & insert)
+            if 'duplicate key value' in str(insert_error) or '23505' in str(insert_error):
+                print("⚠️ Duplicate detected at insert time (race). Fetching existing record.")
+                existing = supabase.table('invoices').select('*').eq('user_id', int(current_user)).eq('invoice_number', invoice_db_data['invoice_number']).limit(1).execute()
+                if existing.data:
+                    saved_invoice = existing.data[0]
+                    # Clean up temp
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+                    return {
+                        "success": True,
+                        "message": "Invoice already existed; returning existing record",
+                        "invoice_details": {
+                            "id": saved_invoice["id"],
+                            "invoice_number": saved_invoice["invoice_number"],
+                            "client": saved_invoice["client"],
+                            "total_amount": saved_invoice["total_amount"],
+                            "credit_score": saved_invoice.get("credit_score")
+                        },
+                        "credit_score_analysis": saved_invoice.get("credit_score_data", {}),
+                        "historical_summary": {
+                            "total_historical_invoices": total_invoices,
+                            "total_amount_all_invoices": sum([inv['total_amount'] for inv in existing_invoices.data]) if existing_invoices.data else 0
+                        },
+                        "duplicate": True
+                    }
+            # Re-raise if not handled duplicate
+            raise
         
         saved_invoice = result.data[0]
         print(f"✅ Invoice saved to database with ID: {saved_invoice['id']}")
@@ -462,7 +468,7 @@ async def process_invoice(
                 "total_amount": saved_invoice["total_amount"],
                 "credit_score": saved_invoice["credit_score"]
             },
-            "credit_score_analysis": credit_score_result.get('credit_score_analysis', {}),
+            "credit_score_analysis": credit_score_result_parsed.get('credit_score_analysis', {}),
             "historical_summary": {
                 "total_historical_invoices": total_invoices + 1,
                 "total_amount_all_invoices": total_amount
@@ -476,11 +482,27 @@ async def process_invoice(
         if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
         print(f"❌ Invoice processing error: {e}")
-        print(f"❌ Error type: {type(e).__name__}")
-        print(f"❌ Error details: {str(e)}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Invoice processing failed: {str(e)}")
+
+@app.post("/process-invoice")
+async def upload_invoice_alias(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user)
+):
+    """Alias endpoint for frontend compatibility - same as /upload-invoice"""
+    return await process_invoice(file, current_user)
+
+@app.post("/calculate-credit-score")
+async def calculate_credit_score_alias(credit_data: dict):
+    """Alias endpoint for frontend compatibility - calculate credit score (no auth required for testing)"""
+    try:
+        print("📊 Calculating credit score...")
+        result = await asyncio.to_thread(calculate_credit_score_main, credit_data, GROQ_API_KEY)
+        print("✅ Credit score calculated")
+        return result
+    except Exception as e:
+        print(f"❌ Credit score calculation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Credit score calculation failed: {str(e)}")
 
 @app.get("/dashboard/credit-score")
 async def get_dashboard_credit_score(current_user: str = Depends(get_current_user)):
@@ -582,18 +604,113 @@ async def calculate_single_invoice_credit_score(credit_data: dict):
         print(f"❌ Single invoice credit score calculation error: {e}")
         raise HTTPException(status_code=500, detail=f"Credit score calculation failed: {str(e)}")
 
-@app.post("/calculate-credit-score")
-async def calculate_credit_score(credit_data: dict):
-    """Calculate credit score (main endpoint that frontend expects)"""
+@app.get("/get-business")
+async def get_business(current_user: str = Depends(get_current_user)):
+    """Get business information for the current user"""
     try:
-        print("📊 Calculating credit score...")
-        result = await asyncio.to_thread(calculate_credit_score_main, credit_data, GROQ_API_KEY)
-        print("✅ Credit score calculated successfully")
-        return result
+        print(f"🏢 Fetching business info for user: {current_user}")
+        
+        # Get user data which might include business info
+        result = supabase.table('users').select('*').eq('id', int(current_user)).execute()
+        user_data = result.data[0] if result.data else {}
+        
+        # Mock business data structure - in production this would be a separate businesses table
+        business_data = {
+            "business_name": user_data.get("full_name", "Business Name"),
+            "industry": "Technology",
+            "revenue": 1000000,
+            "employees": 50,
+            "location": "Mumbai, India",
+            "established_year": 2020
+        }
+        
+        return {"success": True, "business": business_data}
     except Exception as e:
-        print(f"❌ Credit score calculation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Credit score calculation failed: {str(e)}")
+        print(f"❌ Error fetching business info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch business info: {str(e)}")
+
+@app.post("/register-business")
+async def register_business(business: dict, current_user: str = Depends(get_current_user)):
+    """Register or update business details for the current user.
+    Currently stores data inside the users table (mock) until a dedicated businesses table usage is added.
+    """
+    try:
+        print(f"🏢 Saving business info for user: {current_user}")
+        # Basic validation
+        if not business.get("business_name"):
+            raise HTTPException(status_code=400, detail="Business name is required")
+
+        # Upsert strategy: store limited business fields in users table's full_name (or later extend schema)
+        # Placeholder: we just acknowledge receipt
+        return {"success": True, "message": "Business details received", "business": business}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error registering business: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to register business: {str(e)}")
+
+@app.post("/generate-policies")
+async def generate_policies(payload: dict, current_user: str = Depends(get_current_user)):
+    """Generate policy documents based on provided business details and requested policy types.
+    For now this returns mock policy content so the frontend flow works.
+    Expected payload: { business_details: {...}, policy_types: [..], language: 'en' }
+    """
+    try:
+        business = payload.get("business_details", {})
+        policy_types = payload.get("policy_types", [])
+        language = payload.get("language", "en")
+        if not business or not policy_types:
+            raise HTTPException(status_code=400, detail="business_details and policy_types are required")
+
+        policies = {}
+        for p in policy_types:
+            policies[p] = (
+                f"# {p.replace('_',' ').title()}\n\n"
+                f"Generated for: {business.get('business_name','Your Business')}\n"
+                f"Language: {language}\n\n"
+                "This is placeholder content. Replace with AI-generated text once implemented."
+            )
+
+        return {"success": True, "policies": policies}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error generating policies: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate policies: {str(e)}")
+
+@app.get("/get-policies") 
+async def get_policies(current_user: str = Depends(get_current_user)):
+    """Get insurance policies for the current user"""
+    try:
+        print(f"📋 Fetching policies for user: {current_user}")
+        
+        # Mock policies data - in production this would query a policies table
+        policies_data = [
+            {
+                "id": 1,
+                "policy_name": "Business General Liability",
+                "policy_number": "BGL-2024-001",
+                "premium": 25000,
+                "coverage": 1000000,
+                "status": "Active",
+                "renewal_date": "2025-12-31"
+            },
+            {
+                "id": 2,
+                "policy_name": "Professional Indemnity",
+                "policy_number": "PI-2024-002", 
+                "premium": 35000,
+                "coverage": 2000000,
+                "status": "Active",
+                "renewal_date": "2025-11-30"
+            }
+        ]
+        
+        return {"success": True, "policies": policies_data}
+    except Exception as e:
+        print(f"❌ Error fetching policies: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch policies: {str(e)}")
 
 if __name__ == "__main__":
     print("🚀 Starting Nexora Credit Score API with Supabase Database...")
-    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=False)

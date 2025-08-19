@@ -9,6 +9,7 @@ import { InvoiceUploadModal } from '@/components/features/invoice-upload-modal';
 import { InvoiceManagementModal } from '@/components/features/invoice-management-modal';
 import { LoanDiscoveryModal } from '@/components/features/loan-discovery-modal';
 import { MarketplaceModal } from '@/components/features/marketplace-modal';
+import { InsuranceHubModal } from '@/components/features/insurance-hub-modal';
 import { useCreditScore } from '@/hooks/use-credit-score';
 import { useAIInsights } from '@/hooks/use-ai-insights';
 import { 
@@ -369,6 +370,14 @@ export default function Dashboard() {
                   <GraduationCap className="w-5 h-5 mr-3 text-teal-accent" />
                   Learn & Grow
                 </Button>
+                <Button 
+                  onClick={() => openModal('insurance')}
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-muted bg-indigo-50 border border-indigo-200"
+                >
+                  <Activity className="w-5 h-5 mr-3 text-indigo-600" />
+                  🛡️ Insurance Hub
+                </Button>
               </div>
             </Card>
 
@@ -465,6 +474,7 @@ export default function Dashboard() {
       <InvoiceManagementModal open={activeModal === 'invoiceManagement'} onOpenChange={closeModal} />
       <LoanDiscoveryModal open={activeModal === 'loans'} onOpenChange={closeModal} />
       <MarketplaceModal open={activeModal === 'marketplace'} onOpenChange={closeModal} />
+      <InsuranceHubModal open={activeModal === 'insurance'} onOpenChange={closeModal} />
     </div>
   );
 }

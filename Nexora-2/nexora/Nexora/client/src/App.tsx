@@ -10,6 +10,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
+import PolicyGeneratorPage from "@/pages/policy-generator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/profile" component={Profile} />
+      <Route path="/policy-generator" component={PolicyGeneratorPage} />
       <Route component={NotFound} />
     </Switch>
   );

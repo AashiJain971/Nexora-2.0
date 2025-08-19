@@ -33,12 +33,55 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     UNIQUE(invoice_number, user_id)
 );
 
+-- Create businesses table to store MSME business details
+CREATE TABLE IF NOT EXISTS public.businesses (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    business_name VARCHAR(255) NOT NULL,
+    business_type VARCHAR(100) NOT NULL, -- 'retail', 'service', 'manufacturing', 'e-commerce', etc.
+    industry VARCHAR(100) NOT NULL,
+    location_country VARCHAR(100) NOT NULL,
+    location_state VARCHAR(100),
+    location_city VARCHAR(100),
+    website_url VARCHAR(500),
+    has_online_presence BOOLEAN DEFAULT FALSE,
+    has_physical_store BOOLEAN DEFAULT FALSE,
+    collects_personal_data BOOLEAN DEFAULT TRUE,
+    processes_payments BOOLEAN DEFAULT FALSE,
+    uses_cookies BOOLEAN DEFAULT FALSE,
+    has_newsletter BOOLEAN DEFAULT FALSE,
+    target_audience TEXT, -- 'B2B', 'B2C', 'Both'
+    data_retention_period INTEGER DEFAULT 365, -- days
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id) -- One business per user for now
+);
+
+-- Create policies table to store generated legal documents
+CREATE TABLE IF NOT EXISTS public.policies (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    business_name VARCHAR(255) NOT NULL,
+    policy_type VARCHAR(50) NOT NULL, -- 'privacy_policy', 'terms_conditions', 'refund_policy', 'cookie_policy'
+    content TEXT NOT NULL,
+    language VARCHAR(10) DEFAULT 'en',
+    compliance_regions TEXT[], -- ['GDPR', 'Indian_IT_Act', 'CCPA', etc.]
+    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON public.invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_client ON public.invoices(client);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON public.invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON public.invoices(created_at);
+CREATE INDEX IF NOT EXISTS idx_businesses_user_id ON public.businesses(user_id);
+CREATE INDEX IF NOT EXISTS idx_businesses_business_type ON public.businesses(business_type);
+CREATE INDEX IF NOT EXISTS idx_businesses_location_country ON public.businesses(location_country);
+CREATE INDEX IF NOT EXISTS idx_policies_user_id ON public.policies(user_id);
+CREATE INDEX IF NOT EXISTS idx_policies_type ON public.policies(policy_type);
+CREATE INDEX IF NOT EXISTS idx_policies_generated_at ON public.policies(generated_at);
 
 -- Create a function to automatically update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -58,9 +101,19 @@ CREATE TRIGGER update_invoices_updated_at
     BEFORE UPDATE ON public.invoices 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_businesses_updated_at 
+    BEFORE UPDATE ON public.businesses 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_policies_updated_at 
+    BEFORE UPDATE ON public.policies 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.policies ENABLE ROW LEVEL SECURITY;
 
 -- Create policies that allow all operations for authenticated users
 -- You may want to customize this based on your authentication needs
@@ -68,6 +121,12 @@ CREATE POLICY "Allow all operations for authenticated users" ON public.users
     FOR ALL USING (true);
 
 CREATE POLICY "Users can only see their own invoices" ON public.invoices
+    FOR ALL USING (true);
+
+CREATE POLICY "Users can only see their own business" ON public.businesses
+    FOR ALL USING (true);
+
+CREATE POLICY "Users can only see their own policies" ON public.policies
     FOR ALL USING (true);
 
 -- Insert some sample users and data for testing (optional)

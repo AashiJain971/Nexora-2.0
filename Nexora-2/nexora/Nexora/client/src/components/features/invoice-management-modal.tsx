@@ -81,7 +81,30 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
 
   const fetchInvoices = async () => {
     if (!token) {
-      console.log('⚠️ No token available for fetching invoices, waiting for authentication...');
+      console.log('⚠️ No token available for fetching invoices, using test endpoint...');
+      // Fall back to test endpoint when no token is available
+      try {
+        const response = await fetch('http://localhost:8001/test/invoices', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Fetched test invoices data:', data);
+          console.log('📊 Number of invoices found:', data.invoices?.length || 0);
+          
+          setInvoices(data.invoices || []);
+          
+          if (data.invoices?.length > 0) {
+            console.log(`✅ Successfully loaded ${data.invoices.length} test invoices for display`);
+            console.log('📋 First invoice line_items:', data.invoices[0].line_items);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error fetching test invoices:', error);
+      }
       return;
     }
     
@@ -241,18 +264,30 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <FileText className="w-6 h-6 text-teal-accent" />
-              Invoice Management & Credibility History
+              {selectedInvoice ? `Invoice Details - ${selectedInvoice.invoice_number}` : 'Invoice Management & Credibility History'}
             </DialogTitle>
-            <button
-              onClick={addSampleInvoices}
-              className="bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Add Sample Data
-            </button>
+            {selectedInvoice ? (
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedInvoice(null)}
+                className="flex items-center gap-1"
+              >
+                ← Back to List
+              </Button>
+            ) : (
+              <button
+                onClick={addSampleInvoices}
+                className="bg-gradient-to-r from-teal-600 to-purple-600 hover:from-teal-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Add Sample Data
+              </button>
+            )}
           </div>
           <p className="text-muted-foreground">
-            View your uploaded invoices that contribute to your credibility score. 
-            Each invoice adds to your payment history, financial stability analysis, and industry risk assessment.
+            {selectedInvoice 
+              ? `Detailed view of invoice ${selectedInvoice.invoice_number} including all line items and financial breakdown.`
+              : 'View your uploaded invoices that contribute to your credibility score. Each invoice adds to your payment history, financial stability analysis, and industry risk assessment.'
+            }
           </p>
         </DialogHeader>
 
@@ -260,6 +295,114 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <span className="ml-2">Loading your invoices...</span>
+          </div>
+        ) : selectedInvoice ? (
+          // Detailed Invoice View
+          <div className="space-y-6">
+            {/* Invoice Header */}
+            <Card className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Invoice Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Invoice Number:</span>
+                      <span className="font-medium">{selectedInvoice.invoice_number}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Client:</span>
+                      <span className="font-medium">{selectedInvoice.client}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Date:</span>
+                      <span className="font-medium">{formatDate(selectedInvoice.date)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Payment Terms:</span>
+                      <span className="font-medium">{selectedInvoice.payment_terms}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Industry:</span>
+                      <span className="font-medium">{selectedInvoice.industry}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      {getStatusBadge(selectedInvoice.status || 'processed')}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Financial Summary</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Amount:</span>
+                      <span className="font-bold text-green-600 text-lg">
+                        {formatCurrency(selectedInvoice.total_amount, selectedInvoice.currency)}
+                      </span>
+                    </div>
+                    {selectedInvoice.tax_amount && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tax Amount:</span>
+                        <span className="font-medium">
+                          {formatCurrency(selectedInvoice.tax_amount, selectedInvoice.currency)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Currency:</span>
+                      <span className="font-medium">{selectedInvoice.currency}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Line Items */}
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Line Items ({selectedInvoice.line_items?.length || 0})</h3>
+              
+              {selectedInvoice.line_items && selectedInvoice.line_items.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-4 pb-3 border-b font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    <div>Description</div>
+                    <div className="text-right">Amount</div>
+                    <div className="text-right">Currency</div>
+                  </div>
+                  
+                  {selectedInvoice.line_items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-3 gap-4 py-3 border-b border-muted/30 hover:bg-muted/20 rounded px-2 transition-colors">
+                      <div className="font-medium text-foreground">
+                        {item.description || `Item ${index + 1}`}
+                      </div>
+                      <div className="text-right font-medium text-green-600">
+                        {formatCurrency(item.amount, selectedInvoice.currency)}
+                      </div>
+                      <div className="text-right text-muted-foreground">
+                        {selectedInvoice.currency}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Total Row */}
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t-2 border-primary/20 bg-muted/30 p-3 rounded">
+                    <div className="font-bold text-lg">Total</div>
+                    <div className="text-right font-bold text-lg text-green-600">
+                      {formatCurrency(selectedInvoice.total_amount, selectedInvoice.currency)}
+                    </div>
+                    <div className="text-right font-medium">
+                      {selectedInvoice.currency}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No line items available for this invoice</p>
+                  <p className="text-sm">Line item details may not have been captured during upload</p>
+                </div>
+              )}
+            </Card>
           </div>
         ) : (
           <div className="space-y-6">

@@ -363,7 +363,7 @@ export function InvoiceUploadModal({ open, onOpenChange, onUploadComplete }: Inv
                             {analysis?.total_credit_score_analysis?.score_category}
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            Based on all {analysis?.historical_summary?.total_historical_invoices || 0} uploaded invoices
+                            Based on uploaded invoice
                           </div>
                         </div>
                       </div>
