@@ -118,6 +118,24 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
     }
   }, [open, token]);
 
+  const mapPolicy = (p: any): InsurancePolicy => ({
+    id: p.policy_id || p.id,
+    policy_name: p.policy_name,
+    policy_type: p.policy_type,
+    provider_name: p.provider_name || 'Unknown',
+    coverage_amount: p.coverage_amount || p.estimated_coverage_amount || 0,
+    premium_amount: p.premium_amount || p.premium_estimate || 0,
+    premium_frequency: 'annual',
+    start_date: p.start_date || p.created_at || new Date().toISOString(),
+    expiry_date: p.expiry_date || p.renewal_date || new Date().toISOString(),
+    policy_number: p.policy_number,
+    legal_compliance: p.legal_compliance !== false,
+    compliance_authority: p.compliance_authority || 'IRDAI',
+    status: p.status || 'active',
+    document_url: p.document_url,
+    notes: ''
+  });
+
   const loadUserPolicies = async () => {
     try {
       const response = await fetch('http://localhost:8001/insurance/policies', {
@@ -129,7 +147,8 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
 
       if (response.ok) {
         const result = await response.json();
-        setUserPolicies(result.policies || []);
+        const mapped = (result.policies || []).map(mapPolicy);
+        setUserPolicies(mapped);
       }
     } catch (error) {
       console.error('Error loading policies:', error);
@@ -138,16 +157,23 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
 
   const loadExpiringPolicies = async () => {
     try {
-      const response = await fetch('http://localhost:8001/insurance/expiring?days=60', {
+      // Reuse all policies and filter locally by days_to_expiry if backend provided; else compute
+      const response = await fetch('http://localhost:8001/insurance/policies', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-
       if (response.ok) {
         const result = await response.json();
-        setExpiringPolicies(result.expiring_policies || []);
+        const mapped = (result.policies || []).map(mapPolicy);
+        const now = new Date();
+        const expiring = mapped.filter((p: InsurancePolicy) => {
+          const d = new Date(p.expiry_date);
+          const diff = (d.getTime() - now.getTime()) / (1000*60*60*24);
+          return diff >= 0 && diff <= 60;
+        });
+        setExpiringPolicies(expiring);
       }
     } catch (error) {
       console.error('Error loading expiring policies:', error);
@@ -166,26 +192,47 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8001/insurance/assess-risk', {
+      const response = await fetch('http://localhost:8001/insurance/assess', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          business_assessment: riskAssessment
+          business_type: riskAssessment.business_type,
+          assets: riskAssessment.assets,
+            workforce_size: riskAssessment.employee_count,
+          risk_concerns: riskAssessment.risk_concerns,
+          region: 'India',
+          annual_revenue: riskAssessment.annual_revenue
         })
       });
 
       if (response.ok) {
         const result = await response.json();
-        setRecommendations(result.recommendations);
-        setRiskScore(result.risk_score);
+        // Map backend recommendation fields to UI expectation
+        const recs = (result.recommendations || []).map((r: any) => ({
+          template_id: r.template_id,
+          policy_name: r.policy_name,
+          policy_type: r.policy_type,
+          provider_name: r.provider_name,
+          coverage_description: r.coverage_details || '',
+          recommended_coverage: r.estimated_coverage_amount || r.coverage_amount || 0,
+          estimated_premium: r.premium_estimate || 0,
+          legal_compliance: r.legal_compliance !== false,
+          compliance_authority: r.compliance_authority || 'IRDAI',
+          coverage_features: r.optional_addons || {},
+          optional_addons: r.optional_addons || {},
+          relevance_score: 0,
+          matching_risks: r.risk_match || []
+        }));
+        setRecommendations(recs);
+        setRiskScore(result.risk_score || result.riskScore || 0);
         setCurrentStep('recommendations');
         
         toast({
           title: 'Risk Assessment Complete',
-          description: `Found ${result.recommendations.length} insurance recommendations`,
+          description: `Found ${recs.length} insurance recommendations`,
           variant: 'default'
         });
       } else {

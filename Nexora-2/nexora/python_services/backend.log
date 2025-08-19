@@ -1,0 +1,220 @@
+INFO:     Started server process [23888]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+✅ Supabase client initialized successfully
+📊 Connected to: https://eecbqzvcnwrkcxgwjxlt.supabase.co
+🔧 Initializing Supabase database tables...
+✅ Users table already exists
+✅ Invoices table already exists
+ℹ️ insurance_policies table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ insurance_templates table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ business_risk_assessments table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ policy_reminders table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+✅ Database initialization completed!
+🚀 Starting Nexora Credit Score API with Supabase Database...
+✅ Supabase client initialized successfully
+📊 Connected to: https://eecbqzvcnwrkcxgwjxlt.supabase.co
+🔧 Initializing Supabase database tables...
+✅ Users table already exists
+✅ Invoices table already exists
+ℹ️ insurance_policies table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ insurance_templates table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ business_risk_assessments table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+ℹ️ policy_reminders table not found yet (run insurance_policies_schema.sql if you need Insurance Hub)
+✅ Database initialization completed!
+INFO:     127.0.0.1:53670 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53670 - "OPTIONS /calculate-credit-score HTTP/1.1" 200 OK
+📊 Calculating credit score...
+INFO:     127.0.0.1:53671 - "OPTIONS / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53672 - "OPTIONS / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53671 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53672 - "GET / HTTP/1.1" 200 OK
+```
+{
+  "final_weighted_credit_score": 73.5,
+  "score_category": "Good",
+  "factor_breakdown": {
+    "payment_completion_rate": {
+      "actual_value": 0.7,
+      "individual_score": 70,
+      "weighted_score": 28,
+      "weight_percentage": 40,
+      "comment": "Good payment completion rate, indicating reliable payment habits."
+    },
+    "paid_to_pending_ratio": {
+      "actual_value": 2.33,
+      "individual_score": 80,
+      "weighted_score": 24,
+      "weight_percentage": 30,
+      "comment": "Favorable paid-to-pending ratio, suggesting efficient use of incoming revenue to manage pending amounts."
+    },
+    "tax_compliance": {
+      "actual_value": 0.1,
+      "individual_score": 90,
+      "weighted_score": 13.5,
+      "weight_percentage": 15,
+      "comment": "Excellent tax compliance, with a low tax percentage of total amount."
+    },
+    "extra_charges_management": {
+      "actual_value": 0.02,
+      "individual_score": 80,
+      "weighted_score": 12,
+      "weight_percentage": 15,
+      "comment": "Good extra charges management, with a low extra charges percentage of total amount."
+    }
+  },
+  "detailed_analysis": {
+    "strengths": ["Stable payment completion rate", "Favorable paid-to-pending ratio", "Excellent tax compliance"],
+    "weaknesses": ["Room for improvement in extra charges management"],
+    "risk_assessment": "Medium risk",
+    "creditworthiness_summary": [
+      "Cash inflow appears stable enough to cover 70% of monthly invoices, but pending amounts remain significant.",
+      "The paid-to-pending ratio suggests that incoming revenue is being efficiently used to clear outstanding dues.",
+      "Extra charges, while moderate, could be optimized by improving operational efficiency and avoiding late fees or penalties.",
+      "Overall financial health is good, but attention to extra charges management is necessary to improve creditworthiness."
+    ]
+  },
+  "recommendations": {
+    "immediate_actions": ["Monitor and optimize extra charges management"],
+    "long_term_improvements": ["Maintain and improve payment completion rate", "Continuously monitor and optimize paid-to-pending ratio"],
+    "priority_focus_areas": ["Extra charges management", "Payment completion rate"]
+  }
+}
+```
+✅ Credit score calculated
+INFO:     127.0.0.1:53670 - "POST /calculate-credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53677 - "OPTIONS /process-invoice HTTP/1.1" 200 OK
+📄 Processing invoice upload for user: 3
+🔍 Extracting invoice details...
+✅ Invoice extracted: INV-001
+🔎 Field lengths before truncation: {'invoice_number_len': 7, 'client_len': 12, 'payment_terms_len': 3, 'industry_len': 3, 'currency_len': 39}
+💱 Normalized currency: 'INR (implied, not ex' -> 'INR'
+⚠️ Duplicate invoice upload detected; returning existing record without re-processing credit score
+INFO:     127.0.0.1:53677 - "POST /process-invoice HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53677 - "OPTIONS /calculate-single-invoice-credit-score HTTP/1.1" 200 OK
+📊 Calculating single invoice credit score...
+```json
+{
+  "final_weighted_credit_score": 54,
+  "score_category": "Fair",
+  "factor_breakdown": {
+    "payment_completion_rate": {
+      "actual_value": 0.7,
+      "individual_score": 70,
+      "weighted_score": 28,
+      "weight_percentage": 40,
+      "comment": "Good payment completion rate, but not excellent."
+    },
+    "paid_to_pending_ratio": {
+      "actual_value": 0,
+      "individual_score": 0,
+      "weighted_score": 0,
+      "weight_percentage": 30,
+      "comment": "Very poor paid-to-pending ratio, indicating significant issues with pending amounts."
+    },
+    "tax_compliance": {
+      "actual_value": 0,
+      "individual_score": 100,
+      "weighted_score": 15,
+      "weight_percentage": 15,
+      "comment": "Excellent tax compliance, with no tax amount due."
+    },
+    "extra_charges_management": {
+      "actual_value": 0,
+      "individual_score": 100,
+      "weighted_score": 15,
+      "weight_percentage": 15,
+      "comment": "Excellent extra charges management, with no extra charges incurred."
+    }
+  },
+  "detailed_analysis": {
+    "strengths": ["Good payment completion rate", "Excellent tax compliance and extra charges management"],
+    "weaknesses": ["Very poor paid-to-pending ratio"],
+    "risk_assessment": "Medium risk",
+    "creditworthiness_summary": [
+      "The payment completion rate of 70% is good, but the significant pending amount results in a poor paid-to-pending ratio, indicating potential cash flow issues.",
+      "The company has excellent tax compliance and extra charges management, which is a positive aspect of their financial management.",
+      "However, the low paid-to-pending ratio suggests that either payments are being delayed or incoming revenue is not being efficiently used to clear outstanding dues.",
+      "Overall, the financial health appears fair, but attention is required to address the pending amount and improve the paid-to-pending ratio."
+    ]
+  },
+  "recommendations": {
+    "immediate_actions": ["Prioritize clearing pending amounts to improve the paid-to-pending ratio"],
+    "long_term_improvements": ["Implement efficient cash flow management to ensure timely payments and reduce pending amounts"],
+    "priority_focus_areas": ["Paid-to-pending ratio improvement", "Cash flow stability and payment pattern management"]
+  }
+}
+```
+✅ Single invoice credit score calculated
+INFO:     127.0.0.1:53677 - "POST /calculate-single-invoice-credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53682 - "OPTIONS /get-business HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53683 - "OPTIONS /get-policies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53684 - "OPTIONS /get-business HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53685 - "OPTIONS /get-business HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53686 - "OPTIONS /get-policies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53687 - "OPTIONS /get-business HTTP/1.1" 200 OK
+🏢 Fetching business info for user: 3
+INFO:     127.0.0.1:53682 - "GET /get-business HTTP/1.1" 200 OK
+📋 Fetching policies for user: 3
+INFO:     127.0.0.1:53683 - "GET /get-policies HTTP/1.1" 200 OK
+🏢 Fetching business info for user: 3
+INFO:     127.0.0.1:53684 - "GET /get-business HTTP/1.1" 200 OK
+🏢 Fetching business info for user: 3
+INFO:     127.0.0.1:53685 - "GET /get-business HTTP/1.1" 200 OK
+📋 Fetching policies for user: 3
+INFO:     127.0.0.1:53686 - "GET /get-policies HTTP/1.1" 200 OK
+🏢 Fetching business info for user: 3
+INFO:     127.0.0.1:53687 - "GET /get-business HTTP/1.1" 200 OK
+🏢 Fetching business info for user: 3
+INFO:     127.0.0.1:53682 - "GET /get-business HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53740 - "OPTIONS /user/invoices HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53741 - "OPTIONS /user/invoices HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53742 - "OPTIONS /dashboard/credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53743 - "OPTIONS /dashboard/credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "OPTIONS /user/invoices HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53745 - "OPTIONS /user/invoices HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53740 - "OPTIONS /dashboard/credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53741 - "OPTIONS /dashboard/credit-score HTTP/1.1" 200 OK
+📋 Fetching invoices for user: 3
+✅ Retrieved 2 invoices from Supabase
+INFO:     127.0.0.1:53742 - "GET /user/invoices HTTP/1.1" 200 OK
+📋 Fetching invoices for user: 3
+✅ Retrieved 2 invoices from Supabase
+INFO:     127.0.0.1:53743 - "GET /user/invoices HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53744 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53745 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📋 Fetching invoices for user: 3
+✅ Retrieved 2 invoices from Supabase
+INFO:     127.0.0.1:53740 - "GET /user/invoices HTTP/1.1" 200 OK
+📋 Fetching invoices for user: 3
+✅ Retrieved 2 invoices from Supabase
+INFO:     127.0.0.1:53741 - "GET /user/invoices HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53742 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53743 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53749 - "OPTIONS /insurance/policies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53750 - "OPTIONS /insurance/policies HTTP/1.1" 200 OK
+❌ List policies error: {'message': "Could not find the table 'public.insurance_policies' in the schema cache", 'code': 'PGRST205', 'hint': "Perhaps you meant the table 'public.policies'", 'details': None}
+INFO:     127.0.0.1:53749 - "GET /insurance/policies HTTP/1.1" 500 Internal Server Error
+❌ List policies error: {'message': "Could not find the table 'public.insurance_policies' in the schema cache", 'code': 'PGRST205', 'hint': "Perhaps you meant the table 'public.policies'", 'details': None}
+INFO:     127.0.0.1:53750 - "GET /insurance/policies HTTP/1.1" 500 Internal Server Error
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53753 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53755 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53759 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
+📊 Fetching dashboard credit score for user: 3
+✅ Dashboard credit score calculated from Supabase: 64.2 (Fair)
+INFO:     127.0.0.1:53761 - "GET /dashboard/credit-score HTTP/1.1" 200 OK
