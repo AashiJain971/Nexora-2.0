@@ -56,7 +56,7 @@ security = HTTPBearer()
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5001", "http://127.0.0.1:5001"],
+    allow_origins=["http://localhost:5001", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -222,9 +222,9 @@ async def register_user(user: UserRegistration):
     """Register a new user in Supabase"""
     try:
         print(f"📝 Attempting to register user: {user.email}")
-        
         # Check if user already exists
         existing_user = supabase.table("users").select("*").eq("email", user.email).execute()
+        print(existing_user)
         if existing_user.data:
             raise HTTPException(status_code=400, detail="Email already registered")
         
@@ -259,9 +259,6 @@ async def register_user(user: UserRegistration):
                 "full_name": created_user["full_name"]
             }
         }
-        
-    except HTTPException:
-        raise
     except Exception as e:
         print(f"❌ Registration error: {e}")
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
@@ -274,6 +271,7 @@ async def login_user(user: UserLogin):
         
         # Get user from database
         result = supabase.table("users").select("*").eq("email", user.email).execute()
+        print("Result:", result)
         if not result.data:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
@@ -300,9 +298,7 @@ async def login_user(user: UserLogin):
                 "full_name": db_user["full_name"]
             }
         }
-        
-    except HTTPException:
-        raise
+    
     except Exception as e:
         print(f"❌ Login error: {e}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
@@ -1056,4 +1052,4 @@ async def list_policy_reminders(current_user: str = Depends(get_current_user)):
 
 if __name__ == "__main__":
     print("🚀 Starting Nexora Credit Score API with Supabase Database...")
-    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=False)
+    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=True)
