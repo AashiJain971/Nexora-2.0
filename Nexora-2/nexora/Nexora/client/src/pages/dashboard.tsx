@@ -341,9 +341,9 @@ export default function Dashboard() {
                     console.log('New activeModal should be: invoiceManagement');
                   }}
                   variant="ghost" 
-                  className="w-full justify-start hover:bg-muted bg-blue-50 border border-blue-200"
+                  className="w-full justify-start hover:bg-accent/30 focus-visible:ring-1 focus-visible:ring-blue-500"
                 >
-                  <FileText className="w-5 h-5 mr-3 text-blue-600" />
+                  <FileText className="w-5 h-5 mr-3 text-blue-500" />
                   📋 Invoice Management (VIEW HISTORY)
                 </Button>
                 <Button 
@@ -373,9 +373,9 @@ export default function Dashboard() {
                 <Button 
                   onClick={() => openModal('insurance')}
                   variant="ghost" 
-                  className="w-full justify-start hover:bg-muted bg-indigo-50 border border-indigo-200"
+                  className="w-full justify-start hover:bg-accent/30 focus-visible:ring-1 focus-visible:ring-indigo-500"
                 >
-                  <Activity className="w-5 h-5 mr-3 text-indigo-600" />
+                  <Activity className="w-5 h-5 mr-3 text-indigo-500" />
                   🛡️ Insurance Hub
                 </Button>
               </div>

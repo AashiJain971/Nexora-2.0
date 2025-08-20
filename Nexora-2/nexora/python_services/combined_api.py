@@ -89,6 +89,7 @@ class InsuranceAssessmentRequest(BaseModel):
     risk_concerns: List[str] = Field(default_factory=list)
     region: Optional[str] = "India"
     annual_revenue: Optional[float] = None
+    preferences: Optional[Dict[str, Any]] = None  # e.g. {"focus": "employee_welfare", "budget_level": "medium"}
 
 class InsurancePolicyCreate(BaseModel):
     business_id: int
@@ -805,19 +806,61 @@ def _calculate_risk_score(assets: Dict[str, Any], workforce_size: int, risk_conc
         level = "Elevated"
     else:
         level = "Low"
-    return {"risk_score": score, "risk_level": level, "asset_total": asset_total}
+    # Business size classification (simplistic - could blend revenue later)
+    if workforce_size is None:
+        workforce_size = 0
+    if workforce_size <= 10:
+        business_size = "micro"
+    elif workforce_size <= 50:
+        business_size = "small"
+    elif workforce_size <= 250:
+        business_size = "medium"
+    else:
+        business_size = "large"
+    return {"risk_score": score, "risk_level": level, "asset_total": asset_total, "business_size": business_size}
 
 @app.post("/insurance/assess")
 async def insurance_assess(req: InsuranceAssessmentRequest, current_user: str = Depends(get_current_user)):
     """Perform risk assessment and return recommended insurance templates."""
     try:
-        # Fetch templates (if table exists)
-        templates_raw = []
+        # Fetch templates from Supabase insurance_templates table
         try:
             res = supabase.table('insurance_templates').select('*').eq('is_active', True).execute()
             templates_raw = res.data or []
-        except Exception:
-            print("ℹ️ insurance_templates table unavailable; returning empty recommendations")
+            print(f"✅ Loaded {len(templates_raw)} templates from Supabase")
+        except Exception as e:
+            error_msg = str(e)
+            print(f"❌ Error fetching insurance templates from Supabase: {error_msg}")
+            
+            # Check if it's a table not found error
+            if "Could not find the table" in error_msg or "insurance_templates" in error_msg:
+                return {
+                    "success": False,
+                    "error": "insurance_templates_not_found",
+                    "message": "Insurance templates table not found in Supabase",
+                    "instructions": {
+                        "step1": "Go to Supabase Dashboard: https://supabase.com/dashboard/project/eecbqzvcnwrkcxgwjxlt",
+                        "step2": "Navigate to SQL Editor",
+                        "step3": "Execute the insurance table creation script",
+                        "step4": "Copy and run the SQL from supabase_schema.sql file"
+                    },
+                    "sql_location": "/Nexora-2/nexora/python_services/supabase_schema.sql",
+                    "details": "The insurance_templates table needs to be created in your Supabase database before the Insurance Hub can function properly."
+                }
+            else:
+                raise HTTPException(status_code=500, detail=f"Database error: {error_msg}")
+        
+        if not templates_raw:
+            return {
+                "success": False,
+                "error": "no_templates",
+                "message": "No insurance templates found in database",
+                "instructions": {
+                    "step1": "Insurance templates table exists but has no data",
+                    "step2": "Run the data insertion SQL from supabase_schema.sql",
+                    "step3": "This will add sample insurance policies to recommend"
+                }
+            }
 
         risk_calc = _calculate_risk_score(req.assets, req.workforce_size or 0, req.risk_concerns)
 
@@ -846,6 +889,22 @@ async def insurance_assess(req: InsuranceAssessmentRequest, current_user: str = 
             risk_multiplier = 1 + (risk_calc['risk_score'] / 200)  # up to +50%
             premium_est = round(base_premium * risk_multiplier, 2)
             premium_range = f"₹{int(premium_est*0.9)} - ₹{int(premium_est*1.2)}"
+            risk_match_set = tpl_risks.intersection(req.risk_concerns)
+            # Scoring heuristic
+            match_score = (
+                (len(risk_match_set) * 10) +              # risk alignment
+                (15 if req.business_type in tpl_business_types else 0) +
+                (5 if risk_calc['business_size'] in ['small','medium'] else 0) +
+                (3 if (req.preferences or {}).get('focus') in tpl_risks else 0)
+            )
+            reason_parts = []
+            if risk_match_set:
+                reason_parts.append(f"covers key risks: {', '.join(sorted(risk_match_set))}")
+            else:
+                reason_parts.append("broad foundational cover relevant to your sector")
+            reason_parts.append(f"scaled coverage ≈ ₹{int(coverage_est):,}")
+            reason_parts.append(f"risk score {risk_calc['risk_score']} ({risk_calc['risk_level']})")
+            reason_parts.append(f"business size {risk_calc['business_size']}")
             recommended.append({
                 "template_id": tpl.get('template_id'),
                 "policy_name": tpl.get('policy_name'),
@@ -861,8 +920,41 @@ async def insurance_assess(req: InsuranceAssessmentRequest, current_user: str = 
                 "coverage_details": tpl.get('coverage_description'),
                 "exclusions": tpl.get('exclusions_description'),
                 "optional_addons": tpl.get('optional_addons'),
-                "risk_match": list(tpl_risks.intersection(req.risk_concerns))
+                "risk_match": list(risk_match_set),
+                "match_score": match_score,
+                "reason": "; ".join(reason_parts)
             })
+
+        # Guarantee at least one recommendation (fallback if filtering yields none)
+        if not recommended and templates_raw:
+            fallback = templates_raw[:1]
+            for tpl in fallback:
+                min_cov = float(tpl.get('min_coverage_amount') or 0)
+                max_cov = float(tpl.get('max_coverage_amount') or min_cov)
+                base_premium = float(tpl.get('base_premium') or 0)
+                premium_est = round(base_premium * 1.1, 2)
+                recommended.append({
+                    "template_id": tpl.get('template_id'),
+                    "policy_name": tpl.get('policy_name'),
+                    "policy_type": tpl.get('policy_type'),
+                    "provider_name": tpl.get('provider_name'),
+                    "estimated_coverage_amount": min_cov,
+                    "coverage_range": f"₹{int(min_cov)} - ₹{int(max_cov)}",
+                    "premium_estimate": premium_est,
+                    "premium_range": f"₹{int(premium_est*0.9)} - ₹{int(premium_est*1.2)}",
+                    "legal_compliance": tpl.get('legal_compliance', True),
+                    "compliance_authority": tpl.get('compliance_authority', 'IRDAI'),
+                    "compliance_badge": ("✅ IRDAI Approved" if tpl.get('legal_compliance') else "⚠️ Review Required"),
+                    "coverage_details": tpl.get('coverage_description'),
+                    "exclusions": tpl.get('exclusions_description'),
+                    "optional_addons": tpl.get('optional_addons'),
+                    "risk_match": [],
+                    "match_score": 0,
+                    "reason": "Core policy offered as a baseline recommendation (no direct risk match found)."
+                })
+
+        # Sort by match_score descending
+        recommended.sort(key=lambda r: r.get('match_score', 0), reverse=True)
 
         # Persist assessment if table exists
         assessment_id = None
@@ -881,8 +973,13 @@ async def insurance_assess(req: InsuranceAssessmentRequest, current_user: str = 
             }).execute()
             if ins.data:
                 assessment_id = ins.data[0].get('assessment_id')
+            print(f"✅ Saved assessment {assessment_id} to database")
         except Exception as e:
-            print(f"ℹ️ Could not persist risk assessment: {e}")
+            print(f"ℹ️ Could not persist risk assessment to DB: {e}")
+            # Create a simple in-memory assessment ID for tracking
+            import time
+            assessment_id = f"temp_{int(current_user)}_{int(time.time())}"
+            print(f"✅ Created temporary assessment ID: {assessment_id}")
 
         return {
             "success": True,

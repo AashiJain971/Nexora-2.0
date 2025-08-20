@@ -52,6 +52,8 @@ interface InsuranceRecommendation {
   optional_addons: Record<string, any>;
   relevance_score: number;
   matching_risks: string[];
+  match_score?: number;
+  reason?: string;
 }
 
 interface InsurancePolicy {
@@ -224,7 +226,9 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
           coverage_features: r.optional_addons || {},
           optional_addons: r.optional_addons || {},
           relevance_score: 0,
-          matching_risks: r.risk_match || []
+          matching_risks: r.risk_match || [],
+          match_score: r.match_score,
+          reason: r.reason
         }));
         setRecommendations(recs);
         setRiskScore(result.risk_score || result.riskScore || 0);
@@ -646,8 +650,19 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
                               {risk.replace('_', ' ')}
                             </Badge>
                           ))}
+                          {rec.matching_risks.length === 0 && (
+                            <span className="text-xs text-muted-foreground">General coverage</span>
+                          )}
                         </div>
                       </div>
+                      {rec.reason && (
+                        <div className="text-xs text-muted-foreground mt-2 leading-snug">
+                          <span className="font-medium text-foreground">Why: </span>{rec.reason}
+                          {typeof rec.match_score === 'number' && (
+                            <span className="ml-2 text-[10px] px-1 py-0.5 bg-muted rounded">Score {rec.match_score}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="mt-4 pt-4 border-t">
