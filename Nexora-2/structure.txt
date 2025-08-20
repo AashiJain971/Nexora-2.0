@@ -97,7 +97,7 @@
 │   │   ├── postcss.config.js
 │   │   ├── replit.md
 │   │   ├── server
-│   │   │   ├── index.ts
+│   │   │   ├── 
 │   │   │   ├── routes.ts
 │   │   │   ├── storage.ts
 │   │   │   └── vite.ts

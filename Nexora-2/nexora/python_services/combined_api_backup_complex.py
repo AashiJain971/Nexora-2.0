@@ -223,9 +223,9 @@ async def register_user(user: UserRegistration):
     """Register a new user in Supabase"""
     try:
         print(f"📝 Attempting to register user: {user.email}")
+        
         # Check if user already exists
         existing_user = supabase.table("users").select("*").eq("email", user.email).execute()
-        print(existing_user)
         if existing_user.data:
             raise HTTPException(status_code=400, detail="Email already registered")
         
@@ -260,6 +260,9 @@ async def register_user(user: UserRegistration):
                 "full_name": created_user["full_name"]
             }
         }
+        
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ Registration error: {e}")
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
@@ -272,7 +275,6 @@ async def login_user(user: UserLogin):
         
         # Get user from database
         result = supabase.table("users").select("*").eq("email", user.email).execute()
-        print("Result:", result)
         if not result.data:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
@@ -299,7 +301,9 @@ async def login_user(user: UserLogin):
                 "full_name": db_user["full_name"]
             }
         }
-    
+        
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ Login error: {e}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
@@ -704,6 +708,7 @@ def generate_policy_content(policy_type: str, business: dict, language: str = "e
     """
     Generate realistic policy content based on business details and policy type.
     This creates comprehensive, legally-informed policies tailored to the specific business.
+    Supports multiple languages: en, hi, es, fr
     """
     business_name = business.get('business_name', 'Your Business')
     business_type = business.get('business_type', 'business')
@@ -719,51 +724,206 @@ def generate_policy_content(policy_type: str, business: dict, language: str = "e
     
     current_date = datetime.now().strftime("%B %d, %Y")
     
+    # Language-specific translations
+    translations = {
+        'en': {
+            'privacy_policy': 'PRIVACY POLICY',
+            'effective_date': 'Effective Date',
+            'last_updated': 'Last Updated',
+            'introduction': 'INTRODUCTION',
+            'welcome_text': f'Welcome to **{business_name}**',
+            'info_we_collect': 'INFORMATION WE COLLECT',
+            'personal_info': 'Personal Information',
+            'how_we_use': 'HOW WE USE YOUR INFORMATION',
+            'data_security': 'DATA SECURITY',
+            'contact_info': 'CONTACT INFORMATION'
+        },
+        'hi': {
+            'privacy_policy': 'गोपनीयता नीति',
+            'effective_date': 'प्रभावी तिथि',
+            'last_updated': 'अंतिम बार अपडेट',
+            'introduction': 'परिचय',
+            'welcome_text': f'**{business_name}** में आपका स्वागत है',
+            'info_we_collect': 'हम जो जानकारी एकत्र करते हैं',
+            'personal_info': 'व्यक्तिगत जानकारी',
+            'how_we_use': 'हम आपकी जानकारी का उपयोग कैसे करते हैं',
+            'data_security': 'डेटा सुरक्षा',
+            'contact_info': 'संपर्क जानकारी'
+        },
+        'es': {
+            'privacy_policy': 'POLÍTICA DE PRIVACIDAD',
+            'effective_date': 'Fecha de vigencia',
+            'last_updated': 'Última actualización',
+            'introduction': 'INTRODUCCIÓN',
+            'welcome_text': f'Bienvenido a **{business_name}**',
+            'info_we_collect': 'INFORMACIÓN QUE RECOPILAMOS',
+            'personal_info': 'Información Personal',
+            'how_we_use': 'CÓMO USAMOS SU INFORMACIÓN',
+            'data_security': 'SEGURIDAD DE DATOS',
+            'contact_info': 'INFORMACIÓN DE CONTACTO'
+        },
+        'fr': {
+            'privacy_policy': 'POLITIQUE DE CONFIDENTIALITÉ',
+            'effective_date': 'Date d\'entrée en vigueur',
+            'last_updated': 'Dernière mise à jour',
+            'introduction': 'INTRODUCTION',
+            'welcome_text': f'Bienvenue chez **{business_name}**',
+            'info_we_collect': 'INFORMATIONS QUE NOUS COLLECTONS',
+            'personal_info': 'Informations Personnelles',
+            'how_we_use': 'COMMENT NOUS UTILISONS VOS INFORMATIONS',
+            'data_security': 'SÉCURITÉ DES DONNÉES',
+            'contact_info': 'INFORMATIONS DE CONTACT'
+        }
+    }
+    
+    # Get translations for the selected language, fallback to English
+    t = translations.get(language, translations['en'])
+    
     if policy_type == 'privacy_policy':
-        return f"""# PRIVACY POLICY
+        if language == 'hi':  # Hindi
+            return f"""# {t['privacy_policy']}
 
-**Effective Date:** {current_date}  
-**Last Updated:** {current_date}
-
----
-
-## INTRODUCTION
-
-Welcome to **{business_name}** ("{business_name.lower()}", "we", "us", or "our"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you {"visit our website at " + website_url + " or " if has_online_presence else ""}use our services.
-
-**{business_name}** is a {business_type} business operating in the {industry} industry, primarily serving {target_audience.lower()} clients{"" if location_country == "India" else f" with operations in {location_country}"}.
-
-Please read this privacy policy carefully. By accessing or using our services, you acknowledge that you have read, understood, and agree to be bound by the terms of this Privacy Policy.
+**{t['effective_date']}:** {current_date}  
+**{t['last_updated']}:** {current_date}
 
 ---
 
-## INFORMATION WE COLLECT
+## {t['introduction']}
 
-### Personal Information
-We may collect personally identifiable information that you voluntarily provide to us when you:
-- {"Register for an account or use our services" if has_online_presence else "Engage with our services"}
-- Contact us with inquiries
-- {"Make purchases or process transactions" if processes_payments else "Request information about our services"}
-- Subscribe to our newsletter or communications
-- Participate in surveys or promotions
+{t['welcome_text']} ("{business_name.lower()}", "हम", "हमारा", या "हमारे"). यह गोपनीयता नीति बताती है कि हम कैसे आपकी जानकारी एकत्र, उपयोग, प्रकटीकरण और सुरक्षा करते हैं जब आप {"हमारी वेबसाइट " + website_url + " पर जाते हैं या " if has_online_presence else ""}हमारी सेवाओं का उपयोग करते हैं.
 
-**Types of Personal Information:**
-- Name and contact information (email, phone, address)
-- {"Payment and billing information" if processes_payments else "Business contact details"}
-- {"Account credentials and preferences" if has_online_presence else "Service preferences"}
-- Communication records and correspondence
-- {"Demographics and interest data" if target_audience == "B2C" else "Business information and requirements"}
+**{business_name}** एक {business_type} व्यवसाय है जो {industry} उद्योग में काम कर रहा है, मुख्य रूप से {target_audience.lower()} ग्राहकों की सेवा कर रहा है{"" if location_country == "India" else f" और {location_country} में संचालन के साथ"}.
 
-### Non-Personal Information
-We automatically collect certain non-personal information when you interact with our services:
-- {"Browser type, device information, and operating system" if has_online_presence else "Usage patterns and service interactions"}
-- {"IP address and general location data" if uses_cookies else "General location information"}
-- {"Website usage data, page views, and navigation patterns" if has_online_presence and uses_cookies else "Service usage statistics"}
-- {"Cookies and tracking technologies data" if uses_cookies else "Anonymous usage analytics"}
+कृपया इस गोपनीयता नीति को ध्यान से पढ़ें. हमारी सेवाओं का उपयोग या पहुंच करके, आप स्वीकार करते हैं कि आपने इस गोपनीयता नीति की शर्तों को पढ़ा, समझा और सहमति दी है.
 
 ---
 
-## HOW WE USE YOUR INFORMATION
+## {t['info_we_collect']}
+
+### {t['personal_info']}
+हम व्यक्तिगत रूप से पहचान योग्य जानकारी एकत्र कर सकते हैं जो आप स्वेच्छा से हमें प्रदान करते हैं जब आप:
+- {"खाता पंजीकरण करते हैं या हमारी सेवाओं का उपयोग करते हैं" if has_online_presence else "हमारी सेवाओं के साथ जुड़ते हैं"}
+- हमसे पूछताछ के लिए संपर्क करते हैं
+- {"खरीदारी करते हैं या लेन-देन प्रक्रिया करते हैं" if processes_payments else "हमारी सेवाओं के बारे में जानकारी का अनुरोध करते हैं"}
+- हमारे न्यूज़लेटर या संचार की सदस्यता लेते हैं
+- सर्वेक्षण या प्रचार में भाग लेते हैं
+
+**व्यक्तिगत जानकारी के प्रकार:**
+- नाम और संपर्क जानकारी (ईमेल, फोन, पता)
+- {"भुगतान और बिलिंग जानकारी" if processes_payments else "व्यावसायिक संपर्क विवरण"}
+- {"खाता प्रमाण-पत्र और प्राथमिकताएं" if has_online_presence else "सेवा प्राथमिकताएं"}
+- संचार रिकॉर्ड और पत्राचार
+- {"जनसांख्यिकीय और रुचि डेटा" if target_audience == "B2C" else "व्यावसायिक जानकारी और आवश्यकताएं"}
+
+### गैर-व्यक्तिगत जानकारी
+जब आप हमारी सेवाओं के साथ बातचीत करते हैं तो हम स्वचालित रूप से कुछ गैर-व्यक्तिगत जानकारी एकत्र करते हैं:
+- {"ब्राउज़र प्रकार, डिवाइस जानकारी, और ऑपरेटिंग सिस्टम" if has_online_presence else "उपयोग पैटर्न और सेवा इंटरैक्शन"}
+- {"आईपी पता और सामान्य स्थान डेटा" if uses_cookies else "सामान्य स्थान जानकारी"}
+- {"वेबसाइट उपयोग डेटा, पेज व्यूज़, और नेविगेशन पैटर्न" if has_online_presence and uses_cookies else "सेवा उपयोग आंकड़े"}
+- {"कुकीज़ और ट्रैकिंग तकनीक डेटा" if uses_cookies else "अज्ञात उपयोग विश्लेषण"}
+
+---
+
+## {t['how_we_use']}
+
+हम निम्नलिखित वैध व्यावसायिक उद्देश्यों के लिए आपकी जानकारी का उपयोग करते हैं:
+
+### सेवा वितरण
+- हमारी {business_type} सेवाओं का प्रावधान और रखरखाव
+- {"लेन-देन और भुगतान की प्रक्रिया" if processes_payments else "सेवा अनुरोधों की प्रक्रिया"}
+- {"आपके खाते और उपयोगकर्ता अनुभव का प्रबंधन" if has_online_presence else "व्यक्तिगत सेवा प्रदान करना"}
+- आपकी पूछताछ और सहायता अनुरोधों का जवाब देना
+
+### व्यावसायिक संचालन
+- हमारी सेवाओं में सुधार और नई पेशकश विकसित करना
+- बाजार अनुसंधान और विश्लेषण करना
+- {"आपके अनुभव और सिफारिशों को व्यक्तिगत बनाना" if target_audience == "B2C" else "व्यावसायिक समाधान अनुकूलित करना"}
+- सुरक्षा सुनिश्चित करना और धोखाधड़ी को रोकना
+
+---
+
+## {t['data_security']}
+
+हम आपकी व्यक्तिगत जानकारी की सुरक्षा के लिए उद्योग-मानक सुरक्षा उपाय लागू करते हैं:
+
+### तकनीकी सुरक्षा उपाय
+- {"डेटा ट्रांसमिशन के लिए SSL/TLS एन्क्रिप्शन" if has_online_presence else "डेटा स्टोरेज और ट्रांसमिशन के लिए एन्क्रिप्शन"}
+- सुरक्षित सर्वर और संरक्षित डेटाबेस
+- नियमित सुरक्षा ऑडिट और भेद्यता मूल्यांकन
+- {"खाता पहुंच के लिए मल्टी-फैक्टर प्रमाणीकरण" if has_online_presence else "पहुंच नियंत्रण और प्रमाणीकरण उपाय"}
+
+---
+
+## डेटा प्रतिधारण
+
+हम आपकी व्यक्तिगत जानकारी को तब तक बनाए रखते हैं जब तक कि इस गोपनीयता नीति में उल्लिखित उद्देश्यों को पूरा करना आवश्यक हो, आमतौर पर **{data_retention_period} दिन** जब तक कि:
+- कानून द्वारा एक लंबी अवधारण अवधि आवश्यक नहीं है
+- आप अपनी जानकारी को हटाने का अनुरोध नहीं करते
+- जानकारी कानूनी दावों या अनुपालन के लिए आवश्यक नहीं है
+- {"आप हमारे साथ एक सक्रिय खाता बनाए रखते हैं" if has_online_presence else "आप हमारी सेवाओं का उपयोग जारी रखते हैं"}
+
+---
+
+## {t['contact_info']}
+
+यदि आपके पास इस गोपनीयता नीति या हमारी डेटा प्रथाओं के संबंध में प्रश्न, चिंताएं या अनुरोध हैं, तो कृपया हमसे संपर्क करें:
+
+**{business_name}**
+- **ईमेल:** privacy@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **पता:** {business_name} गोपनीयता कार्यालय, {location_country}
+- **फोन:** {"हमारी वेबसाइट पर दी गई जानकारी के माध्यम से हमसे संपर्क करें" if has_online_presence else "प्रदान की गई व्यावसायिक जानकारी के माध्यम से संपर्क करें"}
+
+{location_country}-विशिष्ट गोपनीयता चिंताओं या नियामक पूछताछ के लिए, कृपया अपने पत्राचार में अपना स्थान शामिल करें.
+
+---
+
+**यह गोपनीयता नीति लागू डेटा सुरक्षा कानूनों के साथ अनुपालित है जिसमें {"भारतीय आईटी अधिनियम 2000, जीडीपीआर (जहां लागू हो), और " if location_country == "India" else ""}संबंधित गोपनीयता नियम {location_country} में शामिल हैं.**
+
+*अंतिम समीक्षा और अपडेट: {current_date}*"""
+        
+        else:  # English (default)
+            return f"""# {t['privacy_policy']}
+
+**{t['effective_date']}:** {current_date}  
+**{t['last_updated']}:** {current_date}
+
+---
+
+## {t['introduction']}
+
+{t['welcome_text']} ("{business_name.lower()}", "we", "us", "our"). This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you {"visit our website " + website_url + " or " if has_online_presence else ""}use our services.
+
+**{business_name}** is a {business_type} business operating in the {industry} industry, primarily serving {target_audience.lower()} customers{"" if location_country == "India" else f" with operations in {location_country}"}.
+
+Please read this Privacy Policy carefully. By using or accessing our services, you acknowledge that you have read, understood, and agree to be bound by the terms of this Privacy Policy.
+
+---
+
+## {t['info_we_collect']}
+
+We collect information to provide better services to our users and operate our business effectively.
+
+### {t['personal_info']}
+- Name, email address, and contact information
+- {"Account credentials and login information" if has_online_presence else "Service-related identification"}
+- {"Payment information and billing details" if processes_payments else "Business transaction details"}
+- Communication preferences and history
+
+### Usage and Technical Information
+- {"Website usage data, IP address, and browser information" if has_online_presence else "Service usage patterns and technical data"}
+- {"Cookies and similar tracking technologies" if uses_cookies else "Session and preference data"}
+- Device information and access logs
+- Service interaction and performance data
+
+### Business Information
+- Company details and business requirements
+- Service preferences and customizations
+- Feedback and support communications
+- {"Analytics and marketing preferences" if target_audience == "B2C" else "Business communication preferences"}
+
+---
+
+## {t['how_we_use']}
 
 We use your information for the following legitimate business purposes:
 
@@ -816,7 +976,7 @@ In the event of a merger, acquisition, or sale of our business, your information
 
 ---
 
-## DATA SECURITY
+## {t['data_security']}
 
 We implement industry-standard security measures to protect your personal information:
 
@@ -901,14 +1061,14 @@ The updated policy will be effective immediately upon posting, and your continue
 
 ---
 
-## CONTACT INFORMATION
+## {t['contact_info']}
 
 If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
 
 **{business_name}**
 - **Email:** privacy@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
 - **Address:** {business_name} Privacy Office, {location_country}
-- **Phone:** Contact us through the information provided on our website
+- **Phone:** {"Contact us through the information provided on our website" if has_online_presence else "Contact through provided business information"}
 
 For {location_country}-specific privacy concerns or regulatory inquiries, please include your location in your correspondence.
 
@@ -919,7 +1079,73 @@ For {location_country}-specific privacy concerns or regulatory inquiries, please
 *Last reviewed and updated: {current_date}*"""
 
     elif policy_type == 'terms_conditions':
-        return f"""# TERMS AND CONDITIONS
+        if language == 'hi':  # Hindi
+            return f"""# नियम और शर्तें
+
+**{t['effective_date']}:** {current_date}  
+**{t['last_updated']}:** {current_date}
+
+---
+
+## शर्तों की स्वीकृति
+
+**{business_name}** में आपका स्वागत है. ये नियम और शर्तें ("शर्तें") हमारी {business_type} सेवाओं {"और वेबसाइट " + website_url if has_online_presence else "और सेवाओं"} के आपके उपयोग को नियंत्रित करती हैं. हमारी सेवाओं का उपयोग या पहुंच करके, आप इन शर्तों से बंधे होने के लिए सहमत हैं.
+
+यदि आप इन शर्तों से सहमत नहीं हैं, तो कृपया हमारी सेवाओं का उपयोग न करें.
+
+---
+
+## सेवाओं का विवरण
+
+**{business_name}** एक {business_type} कंपनी है जो {industry} उद्योग में काम कर रही है. हम प्रदान करते हैं:
+
+{"### डिजिटल सेवाएं" + chr(10) + "- ऑनलाइन प्लेटफॉर्म पहुंच और कार्यक्षमता" + chr(10) + "- उपयोगकर्ता खाता प्रबंधन" + chr(10) + "- डिजिटल सामग्री और संसाधन" if has_online_presence else "### व्यावसायिक सेवाएं"}
+- {industry.title()} समाधान और विशेषज्ञता
+- {"भुगतान प्रसंस्करण और लेन-देन सेवाएं" if processes_payments else "परामर्श और पेशेवर सेवाएं"}
+- ग्राहक सहायता और तकनीकी सहायता
+- {"अनुकूलित व्यावसायिक समाधान" if target_audience == "B2B" else "उपभोक्ता-केंद्रित सेवाएं"}
+
+---
+
+## उपयोगकर्ता जिम्मेदारियां
+
+### खाता प्रबंधन
+{"- सटीक खाता जानकारी बनाए रखें" + chr(10) + "- अपने लॉगिन प्रमाण-पत्रों की सुरक्षा करें" + chr(10) + "- अनधिकृत पहुंच के बारे में हमें सूचित करें" if has_online_presence else "- सटीक संपर्क जानकारी प्रदान करें" + chr(10) + "- हमारी टीम के साथ संचार बनाए रखें"}
+- लागू कानूनों और नियमों का अनुपालन करें
+- केवल वैध उद्देश्यों के लिए सेवाओं का उपयोग करें
+
+### निषिद्ध गतिविधियां
+आप सहमत हैं कि आप निम्नलिखित नहीं करेंगे:
+- {"किसी भी कानून का उल्लंघन या दूसरों के अधिकारों का हनन" + chr(10) + "- दुर्भावनापूर्ण सामग्री या स्पैम अपलोड करना" if has_online_presence else "धोखाधड़ी या भ्रामक प्रथाओं में संलग्न होना"}
+- हमारी सेवाओं या सिस्टम में हस्तक्षेप करना
+- {"हमारे सॉफ़्टवेयर को रिवर्स इंजीनियर करना या कॉपी करना" if has_online_presence else "मालिकाना जानकारी का दुरुपयोग करना"}
+- {"दूसरों के साथ खाता प्रमाण-पत्र साझा करना" if has_online_presence else "गोपनीयता समझौतों का उल्लंघन करना"}
+
+---
+
+## भुगतान शर्तें
+
+{"### शुल्क और बिलिंग" + chr(10) + "- सेवा शुल्क खरीदारी से पहले स्पष्ट रूप से प्रदर्शित होते हैं" + chr(10) + "- भुगतान अधिकृत प्रदाताओं के माध्यम से सुरक्षित रूप से प्रसंस्करण किए जाते हैं" + chr(10) + "- सभी शुल्क लागू करों के अतिरिक्त हैं जब तक कि अन्यथा न कहा गया हो" + chr(10) + chr(10) + "### रिफंड नीति" + chr(10) + "- रिफंड हमारी अलग रिफंड नीति के अधीन हैं" + chr(10) + "- कुछ सेवाएं गैर-वापसी योग्य हो सकती हैं" + chr(10) + "- विवाद समाधान प्रक्रियाएं उपलब्ध हैं" if processes_payments else "### सेवा शुल्क" + chr(10) + "- सेवा शुल्क जुड़ाव से पहले सहमत होते हैं" + chr(10) + "- भुगतान शर्तें सेवा समझौतों में निर्दिष्ट हैं" + chr(10) + "- विलंब भुगतान शुल्क निर्दिष्ट के अनुसार लागू हो सकते हैं"}
+
+---
+
+## {t['contact_info']}
+
+इन नियमों और शर्तों के बारे में प्रश्नों के लिए:
+
+**{business_name}**
+- **ईमेल:** legal@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **पता:** {business_name} कानूनी विभाग, {location_country}
+- {"**फोन:** हमारी वेबसाइट संपर्क जानकारी के माध्यम से उपलब्ध" if has_online_presence else "**फोन:** प्रदान की गई व्यावसायिक जानकारी के माध्यम से संपर्क करें"}
+
+---
+
+**ये नियम {location_country} में लागू वाणिज्यिक कानूनों {"और " + industry + " व्यवसायों के लिए उद्योग-विशिष्ट नियमों" if business_type in ["services", "consulting"] else ""} के साथ अनुपालित हैं.**
+
+*अंतिम समीक्षा और अपडेट: {current_date}*"""
+
+        else:  # English (default)
+            return f"""# TERMS AND CONDITIONS
 
 **Effective Date:** {current_date}  
 **Last Updated:** {current_date}
@@ -961,6 +1187,27 @@ You agree not to:
 - {"Share account credentials with others" if has_online_presence else "Violate confidentiality agreements"}
 
 ---
+
+## PAYMENT TERMS
+
+{"### Fees and Billing" + chr(10) + "- Service fees are clearly displayed before purchase" + chr(10) + "- Payments are processed securely through authorized providers" + chr(10) + "- All fees are exclusive of applicable taxes unless stated otherwise" + chr(10) + chr(10) + "### Refund Policy" + chr(10) + "- Refunds are subject to our separate Refund Policy" + chr(10) + "- Certain services may be non-refundable" + chr(10) + "- Dispute resolution procedures are available" if processes_payments else "### Service Fees" + chr(10) + "- Service fees are agreed upon before engagement" + chr(10) + "- Payment terms are specified in service agreements" + chr(10) + "- Late payment fees may apply as specified"}
+
+---
+
+## CONTACT INFORMATION
+
+For questions about these Terms and Conditions:
+
+**{business_name}**
+- **Email:** legal@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name} Legal Department, {location_country}
+- {"**Phone:** Available through our website contact information" if has_online_presence else "**Phone:** Contact through provided business information"}
+
+---
+
+**These Terms are compliant with applicable commercial laws in {location_country} {"and industry-specific regulations for " + industry + " businesses" if business_type in ["services", "consulting"] else ""}.**
+
+*Last reviewed and updated: {current_date}*"""
 
 ## PAYMENT TERMS
 
@@ -1462,11 +1709,14 @@ For questions about this policy:
 - **Address:** {business_name}, {location_country}
 
 *Policy under development - Last updated: {current_date}*"""
+    
+    # Fallback for unsupported policy types
+    return f"Policy type '{policy_type}' is not supported."
 
 @app.post("/generate-policies")
 async def generate_policies(payload: dict, current_user: str = Depends(get_current_user)):
     """Generate policy documents based on provided business details and requested policy types.
-    For now this returns mock policy content so the frontend flow works.
+    Saves generated policies to Supabase and returns them to the frontend.
     Expected payload: { business_details: {...}, policy_types: [..], language: 'en' }
     """
     try:
@@ -1476,11 +1726,66 @@ async def generate_policies(payload: dict, current_user: str = Depends(get_curre
         if not business or not policy_types:
             raise HTTPException(status_code=400, detail="business_details and policy_types are required")
 
+        print(f"📝 Generating {len(policy_types)} policies for user {current_user}")
+        
         policies = {}
-        for p in policy_types:
-            policies[p] = generate_policy_content(p, business, language)
-
-        return {"success": True, "policies": policies}
+        saved_policy_ids = []
+        
+        # Generate and save each policy
+        for policy_type in policy_types:
+            try:
+                # Generate policy content
+                policy_content = generate_policy_content(policy_type, business, language)
+                policies[policy_type] = policy_content
+                
+                # Prepare policy data for Supabase
+                business_name = business.get('business_name', 'Unknown Business')
+                location_country = business.get('location_country', 'India')
+                
+                # Determine compliance regions based on business location
+                compliance_regions = ['Indian_IT_Act']  # Default for India
+                if location_country in ['European Union', 'Germany', 'France', 'UK']:
+                    compliance_regions.append('GDPR')
+                elif location_country == 'United States':
+                    compliance_regions.extend(['CCPA', 'COPPA'])
+                elif location_country == 'Canada':
+                    compliance_regions.append('PIPEDA')
+                
+                policy_data = {
+                    'user_id': int(current_user),
+                    'business_name': business_name,
+                    'policy_type': policy_type,
+                    'content': policy_content,
+                    'language': language,
+                    'compliance_regions': compliance_regions
+                }
+                
+                print(f"💾 Saving {policy_type} policy to Supabase for {business_name}")
+                
+                # Insert policy into Supabase
+                result = supabase.table('policies').insert(policy_data).execute()
+                
+                if result.data:
+                    policy_id = result.data[0]['id']
+                    saved_policy_ids.append(policy_id)
+                    print(f"✅ Successfully saved {policy_type} policy with ID: {policy_id}")
+                else:
+                    print(f"⚠️ Warning: No data returned when saving {policy_type} policy")
+                    
+            except Exception as policy_error:
+                print(f"❌ Error processing {policy_type} policy: {policy_error}")
+                # Continue with other policies even if one fails
+                continue
+        
+        print(f"✅ Successfully generated and saved {len(saved_policy_ids)} policies")
+        
+        return {
+            "success": True, 
+            "policies": policies,
+            "saved_policy_ids": saved_policy_ids,
+            "total_saved": len(saved_policy_ids)
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -1489,36 +1794,86 @@ async def generate_policies(payload: dict, current_user: str = Depends(get_curre
 
 @app.get("/get-policies") 
 async def get_policies(current_user: str = Depends(get_current_user)):
-    """Get insurance policies for the current user"""
+    """Get generated policies for the current user from Supabase"""
     try:
         print(f"📋 Fetching policies for user: {current_user}")
         
-        # Mock policies data - in production this would query a policies table
-        policies_data = [
-            {
-                "id": 1,
-                "policy_name": "Business General Liability",
-                "policy_number": "BGL-2024-001",
-                "premium": 25000,
-                "coverage": 1000000,
-                "status": "Active",
-                "renewal_date": "2025-12-31"
-            },
-            {
-                "id": 2,
-                "policy_name": "Professional Indemnity",
-                "policy_number": "PI-2024-002", 
-                "premium": 35000,
-                "coverage": 2000000,
-                "status": "Active",
-                "renewal_date": "2025-11-30"
-            }
-        ]
+        # Query policies table for the current user, ordered by most recent first
+        result = supabase.table('policies').select(
+            'id, business_name, policy_type, content, language, compliance_regions, generated_at, updated_at'
+        ).eq('user_id', int(current_user)).order('generated_at', desc=True).execute()
         
-        return {"success": True, "policies": policies_data}
+        if not result.data:
+            print(f"ℹ️ No policies found for user {current_user}")
+            return {"success": True, "data": [], "total_count": 0}
+        
+        policies_data = []
+        for policy in result.data:
+            # Transform the data to match frontend expectations
+            formatted_policy = {
+                "id": str(policy['id']),
+                "policy_type": policy['policy_type'],
+                "content": policy['content'],
+                "generated_at": policy['generated_at'],
+                "compliance_regions": policy.get('compliance_regions', []),
+                "business_name": policy['business_name'],
+                "language": policy.get('language', 'en')
+            }
+            policies_data.append(formatted_policy)
+        
+        print(f"✅ Retrieved {len(policies_data)} policies from Supabase")
+        
+        return {
+            "success": True, 
+            "data": policies_data,
+            "total_count": len(policies_data)
+        }
+        
     except Exception as e:
-        print(f"❌ Error fetching policies: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch policies: {str(e)}")
+        print(f"❌ Error fetching policies from Supabase: {e}")
+        # Return empty array instead of failing completely
+        return {
+            "success": False, 
+            "data": [],
+            "total_count": 0,
+            "error": f"Failed to fetch policies: {str(e)}"
+        }
+
+@app.delete("/delete-policy/{policy_id}")
+async def delete_policy(policy_id: str, current_user: str = Depends(get_current_user)):
+    """Delete a specific policy for the current user"""
+    try:
+        print(f"🗑️ Attempting to delete policy {policy_id} for user {current_user}")
+        
+        # Verify the policy belongs to the current user before deleting
+        verify_result = supabase.table('policies').select('id, user_id, policy_type').eq('id', int(policy_id)).eq('user_id', int(current_user)).execute()
+        
+        if not verify_result.data:
+            print(f"❌ Policy {policy_id} not found or doesn't belong to user {current_user}")
+            raise HTTPException(status_code=404, detail="Policy not found or access denied")
+        
+        policy_info = verify_result.data[0]
+        print(f"🔍 Found policy: {policy_info['policy_type']} (ID: {policy_id})")
+        
+        # Delete the policy
+        delete_result = supabase.table('policies').delete().eq('id', int(policy_id)).eq('user_id', int(current_user)).execute()
+        
+        if delete_result.data:
+            print(f"✅ Successfully deleted policy {policy_id}")
+            return {
+                "success": True,
+                "message": f"Policy {policy_info['policy_type']} deleted successfully",
+                "deleted_policy_id": policy_id
+            }
+        else:
+            print(f"⚠️ No rows affected when deleting policy {policy_id}")
+            raise HTTPException(status_code=500, detail="Failed to delete policy")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error deleting policy {policy_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete policy: {str(e)}")
 
 # ----------------- Insurance Hub Endpoints ----------------- #
 
@@ -1907,4 +2262,4 @@ async def list_policy_reminders(current_user: str = Depends(get_current_user)):
 
 if __name__ == "__main__":
     print("🚀 Starting Nexora Credit Score API with Supabase Database...")
-    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=False)

@@ -7,7 +7,7 @@ import "./index.css";
 async function testBackendConnections() {
   // Test Invoice API (GET /)
   try {
-    const invoiceRes = await fetch("http://localhost:8001/");
+    const invoiceRes = await fetch("https://nexora-2-0-6.onrender.com/");
     const invoiceData = await invoiceRes.json();
     console.log("✅ Invoice API connection OK:", invoiceData);
   } catch (err) {
@@ -16,7 +16,7 @@ async function testBackendConnections() {
 
   // Test Credit Score API (POST /calculate-credit-score)
   try {
-    const creditRes = await fetch("http://localhost:8001/calculate-credit-score", {
+    const creditRes = await fetch("https://nexora-2-0-6.onrender.com/calculate-credit-score", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

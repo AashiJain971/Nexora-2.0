@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyTokenAndRefresh = async (currentToken: string) => {
     try {
       // Test the token by making a simple API call
-      const response = await fetch('http://localhost:8001/', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/', {
         headers: {
           'Authorization': `Bearer ${currentToken}`,
         },
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if user already exists by trying login first
       console.log('🔐 Attempting demo user authentication...');
       
-      const loginResponse = await fetch('http://localhost:8001/login', {
+      const loginResponse = await fetch('https://nexora-2-0-6.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If login fails, try to register new demo user
       console.log('🆕 Demo user not found, creating new user...');
-      const response = await fetch('http://localhost:8001/register', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshToken = async () => {
     try {
       console.log('🔄 Refreshing authentication token...');
-      const loginResponse = await fetch('http://localhost:8001/login', {
+      const loginResponse = await fetch('https://nexora-2-0-6.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

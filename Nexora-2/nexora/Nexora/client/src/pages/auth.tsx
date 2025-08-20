@@ -26,7 +26,7 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8001/login', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8001/register', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export default function AuthPage() {
     
     try {
       // Register demo account
-      const registerResponse = await fetch('http://localhost:8001/register', {
+      const registerResponse = await fetch('https://nexora-2-0-6.onrender.com/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ export default function AuthPage() {
         });
       } else if (registerResult.detail?.includes('already registered')) {
         // Demo user exists, try to login
-        const loginResponse = await fetch('http://localhost:8001/login', {
+        const loginResponse = await fetch('https://nexora-2-0-6.onrender.com/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

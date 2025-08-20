@@ -40,7 +40,7 @@ export function useCreditScore(): CreditScoreData {
       console.log('📊 Fetching dashboard credit score from Supabase API...');
       
       // Use the new dashboard credit score endpoint
-      const creditScoreResponse = await fetch('http://localhost:8001/dashboard/credit-score', {
+      const creditScoreResponse = await fetch('https://nexora-2-0-6.onrender.com/dashboard/credit-score', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

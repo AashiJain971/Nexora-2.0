@@ -76,7 +76,7 @@ export function InvoiceUploadModal({ open, onOpenChange, onUploadComplete }: Inv
       console.log('📤 Payload being sent:', formData);
 
       let authToken = token;
-      let processResponse = await fetch('http://localhost:8001/process-invoice', {
+      let processResponse = await fetch('https://nexora-2-0-6.onrender.com/process-invoice', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -91,7 +91,7 @@ export function InvoiceUploadModal({ open, onOpenChange, onUploadComplete }: Inv
         if (newToken) {
           console.log('✅ Token refreshed, retrying request...');
           authToken = newToken;
-          processResponse = await fetch('http://localhost:8001/process-invoice', {
+          processResponse = await fetch('https://nexora-2-0-6.onrender.com/process-invoice', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${authToken}`,
@@ -126,7 +126,7 @@ export function InvoiceUploadModal({ open, onOpenChange, onUploadComplete }: Inv
       const historicalSummary = result.historical_summary;
 
       // Calculate individual invoice credibility score using the new endpoint
-      const singleInvoiceResponse = await fetch('http://localhost:8001/calculate-single-invoice-credit-score', {
+      const singleInvoiceResponse = await fetch('https://nexora-2-0-6.onrender.com/calculate-single-invoice-credit-score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

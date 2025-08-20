@@ -135,6 +135,126 @@ INSERT INTO public.users (email, full_name, password_hash) VALUES
     ('jane@example.com', 'Jane Smith', '$2b$12$example_hash_replace_this')
 ON CONFLICT (email) DO NOTHING;
 
+-- Create insurance_templates table for policy recommendations
+CREATE TABLE IF NOT EXISTS public.insurance_templates (
+    template_id SERIAL PRIMARY KEY,
+    policy_name VARCHAR(255) NOT NULL,
+    policy_type VARCHAR(100) NOT NULL,
+    provider_name VARCHAR(255) NOT NULL,
+    business_types TEXT[] NOT NULL,
+    target_industries TEXT[] NOT NULL,
+    min_coverage_amount DECIMAL(15,2) NOT NULL,
+    max_coverage_amount DECIMAL(15,2) NOT NULL,
+    base_premium DECIMAL(15,2) NOT NULL,
+    coverage_description TEXT NOT NULL,
+    exclusions_description TEXT,
+    legal_compliance BOOLEAN DEFAULT TRUE,
+    compliance_authority VARCHAR(100) DEFAULT 'IRDAI',
+    irdai_approval_number VARCHAR(255),
+    risk_categories TEXT[],
+    optional_addons JSONB,
+    features JSONB,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create insurance_policies table for user policies
+CREATE TABLE IF NOT EXISTS public.insurance_policies (
+    policy_id SERIAL PRIMARY KEY,
+    business_id INTEGER REFERENCES public.businesses(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    policy_name VARCHAR(255) NOT NULL,
+    policy_type VARCHAR(100) NOT NULL,
+    provider_name VARCHAR(255) NOT NULL,
+    coverage_amount DECIMAL(15,2) NOT NULL,
+    premium_amount DECIMAL(15,2) NOT NULL,
+    premium_range VARCHAR(50),
+    legal_compliance BOOLEAN DEFAULT TRUE,
+    compliance_authority VARCHAR(100) DEFAULT 'IRDAI',
+    policy_number VARCHAR(255),
+    start_date DATE NOT NULL,
+    expiry_date DATE NOT NULL,
+    status VARCHAR(50) DEFAULT 'active',
+    document_url TEXT,
+    coverage_details JSONB,
+    exclusions JSONB,
+    optional_addons JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create business_risk_assessments table
+CREATE TABLE IF NOT EXISTS public.business_risk_assessments (
+    assessment_id SERIAL PRIMARY KEY,
+    business_id INTEGER REFERENCES public.businesses(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    assessment_data JSONB NOT NULL,
+    risk_score INTEGER NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
+    risk_level VARCHAR(20) NOT NULL,
+    identified_risks TEXT[],
+    recommended_policies TEXT[],
+    is_current BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for insurance tables
+CREATE INDEX IF NOT EXISTS idx_insurance_policies_user_id ON public.insurance_policies(user_id);
+CREATE INDEX IF NOT EXISTS idx_insurance_templates_policy_type ON public.insurance_templates(policy_type);
+CREATE INDEX IF NOT EXISTS idx_business_risk_assessments_user_id ON public.business_risk_assessments(user_id);
+
+-- Enable RLS for insurance tables
+ALTER TABLE public.insurance_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.insurance_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.business_risk_assessments ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for insurance tables
+CREATE POLICY "Users can manage their own insurance policies" ON public.insurance_policies
+    FOR ALL USING (true);
+
+CREATE POLICY "Anyone can view insurance templates" ON public.insurance_templates
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can manage their own risk assessments" ON public.business_risk_assessments
+    FOR ALL USING (true);
+
+-- Insert insurance templates
+INSERT INTO public.insurance_templates (
+    policy_name, policy_type, provider_name, business_types, target_industries,
+    min_coverage_amount, max_coverage_amount, base_premium, coverage_description,
+    legal_compliance, compliance_authority, irdai_approval_number, risk_categories, features
+) VALUES 
+    ('Professional Indemnity Insurance', 'professional_indemnity', 'HDFC ERGO',
+     ARRAY['services', 'consulting', 'digital'], ARRAY['technology', 'consulting', 'professional_services'],
+     500000, 10000000, 15000, 'Protection against professional errors, omissions, and negligence claims',
+     TRUE, 'IRDAI', 'IRDAI/PI/2024/001', ARRAY['professional_liability', 'errors_omissions'],
+     '{"errors_omissions": true, "legal_costs": true, "defense_costs": true}'::jsonb),
+    
+    ('Cyber Liability Insurance', 'cyber_liability', 'ICICI Lombard',
+     ARRAY['digital', 'e-commerce', 'services'], ARRAY['technology', 'finance', 'healthcare'],
+     1000000, 50000000, 25000, 'Comprehensive protection against cyber attacks, data breaches, and digital fraud',
+     TRUE, 'IRDAI', 'IRDAI/CY/2024/002', ARRAY['cyber', 'data_breach', 'digital_fraud'],
+     '{"data_breach": true, "cyber_extortion": true, "business_interruption": true}'::jsonb),
+    
+    ('Public Liability Insurance', 'public_liability', 'New India Assurance',
+     ARRAY['retail', 'manufacturing', 'services'], ARRAY['retail', 'hospitality', 'manufacturing'],
+     200000, 5000000, 12000, 'Coverage for third-party bodily injury and property damage claims',
+     TRUE, 'IRDAI', 'IRDAI/PL/2024/003', ARRAY['liability', 'third_party_injury', 'property_damage'],
+     '{"third_party_injury": true, "property_damage": true, "legal_expenses": true}'::jsonb),
+    
+    ('Employee Health Insurance', 'health', 'Star Health',
+     ARRAY['services', 'manufacturing', 'retail', 'digital'], ARRAY['all'],
+     100000, 2000000, 8000, 'Comprehensive health coverage for employees and their families',
+     TRUE, 'IRDAI', 'IRDAI/HI/2024/006', ARRAY['employee_welfare', 'medical_emergencies'],
+     '{"cashless_treatment": true, "pre_existing_diseases": true, "maternity_cover": true}'::jsonb),
+    
+    ('Fire & Theft Insurance', 'asset_protection', 'Oriental Insurance',
+     ARRAY['retail', 'manufacturing'], ARRAY['retail', 'manufacturing', 'warehousing'],
+     300000, 15000000, 10000, 'Protection against fire, theft, and burglary of business assets',
+     TRUE, 'IRDAI', 'IRDAI/FT/2024/007', ARRAY['fire', 'theft', 'burglary', 'vandalism'],
+     '{"fire_damage": true, "theft_burglary": true, "vandalism": true}'::jsonb)
+ON CONFLICT DO NOTHING;
+
 -- Insert sample invoices (replace user_id with actual user IDs)
 -- Note: You'll need to replace the user_id values with actual user IDs from your users table
 INSERT INTO public.invoices (
