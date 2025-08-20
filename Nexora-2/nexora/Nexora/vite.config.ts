@@ -34,4 +34,14 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+  preview: {
+    host: "0.0.0.0",
+    port: process.env.PORT ? parseInt(process.env.PORT) : 4173,
+    allowedHosts: [
+      "nexora-2-0-5.onrender.com",
+      "localhost",
+      "127.0.0.1",
+      ".onrender.com", // Allow all onrender.com subdomains
+    ],
+  },
 });
