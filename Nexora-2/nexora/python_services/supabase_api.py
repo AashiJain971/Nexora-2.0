@@ -30,7 +30,7 @@ app = FastAPI(title="Nexora Credit Score API with Supabase")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5001", "http://127.0.0.1:5001"],
+    allow_origins=["http://localhost:5001", "http://127.0.0.1:5001","https://nexora-2-0-5.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
