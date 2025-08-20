@@ -704,6 +704,769 @@ async def register_business(business: dict, current_user: str = Depends(get_curr
         print(f"❌ Error registering business: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to register business: {str(e)}")
 
+def generate_policy_content(policy_type: str, business: dict, language: str = "en") -> str:
+    """
+    Generate realistic policy content based on business details and policy type.
+    This creates comprehensive, legally-informed policies tailored to the specific business.
+    """
+    business_name = business.get('business_name', 'Your Business')
+    business_type = business.get('business_type', 'business')
+    industry = business.get('industry', 'general')
+    location_country = business.get('location_country', 'India')
+    website_url = business.get('website_url', f'www.{business_name.lower().replace(" ", "")}.com')
+    has_online_presence = business.get('has_online_presence', False)
+    processes_payments = business.get('processes_payments', False)
+    uses_cookies = business.get('uses_cookies', False)
+    collects_personal_data = business.get('collects_personal_data', True)
+    target_audience = business.get('target_audience', 'B2C')
+    data_retention_period = business.get('data_retention_period', 365)
+    
+    current_date = datetime.now().strftime("%B %d, %Y")
+    
+    if policy_type == 'privacy_policy':
+        return f"""# PRIVACY POLICY
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## INTRODUCTION
+
+Welcome to **{business_name}** ("{business_name.lower()}", "we", "us", or "our"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you {"visit our website at " + website_url + " or " if has_online_presence else ""}use our services.
+
+**{business_name}** is a {business_type} business operating in the {industry} industry, primarily serving {target_audience.lower()} clients{"" if location_country == "India" else f" with operations in {location_country}"}.
+
+Please read this privacy policy carefully. By accessing or using our services, you acknowledge that you have read, understood, and agree to be bound by the terms of this Privacy Policy.
+
+---
+
+## INFORMATION WE COLLECT
+
+### Personal Information
+We may collect personally identifiable information that you voluntarily provide to us when you:
+- {"Register for an account or use our services" if has_online_presence else "Engage with our services"}
+- Contact us with inquiries
+- {"Make purchases or process transactions" if processes_payments else "Request information about our services"}
+- Subscribe to our newsletter or communications
+- Participate in surveys or promotions
+
+**Types of Personal Information:**
+- Name and contact information (email, phone, address)
+- {"Payment and billing information" if processes_payments else "Business contact details"}
+- {"Account credentials and preferences" if has_online_presence else "Service preferences"}
+- Communication records and correspondence
+- {"Demographics and interest data" if target_audience == "B2C" else "Business information and requirements"}
+
+### Non-Personal Information
+We automatically collect certain non-personal information when you interact with our services:
+- {"Browser type, device information, and operating system" if has_online_presence else "Usage patterns and service interactions"}
+- {"IP address and general location data" if uses_cookies else "General location information"}
+- {"Website usage data, page views, and navigation patterns" if has_online_presence and uses_cookies else "Service usage statistics"}
+- {"Cookies and tracking technologies data" if uses_cookies else "Anonymous usage analytics"}
+
+---
+
+## HOW WE USE YOUR INFORMATION
+
+We use your information for the following legitimate business purposes:
+
+### Service Delivery
+- Providing and maintaining our {business_type} services
+- Processing {"transactions and payments" if processes_payments else "service requests"}
+- {"Managing your account and user experience" if has_online_presence else "Delivering personalized service"}
+- Responding to your inquiries and support requests
+
+### Business Operations
+- Improving our services and developing new offerings
+- Conducting market research and analytics
+- {"Personalizing your experience and recommendations" if target_audience == "B2C" else "Customizing business solutions"}
+- Ensuring security and preventing fraud
+
+### Legal and Compliance
+- Complying with applicable laws and regulations
+- {"Processing payments and maintaining financial records" if processes_payments else "Maintaining business records"}
+- Protecting our rights and interests
+- Responding to legal requests and preventing misuse
+
+### Communication
+- Sending service-related notifications and updates
+- {"Marketing communications (with your consent)" if target_audience == "B2C" else "Business communications and updates"}
+- Newsletter and promotional content (with opt-out options)
+- Important policy or service changes
+
+---
+
+## INFORMATION SHARING AND DISCLOSURE
+
+We do not sell, rent, or trade your personal information. We may share your information in the following limited circumstances:
+
+### Service Providers
+We work with trusted third-party service providers who assist us in operating our business:
+- {"Payment processors and financial institutions" if processes_payments else "Business service providers"}
+- {"Cloud hosting and data storage providers" if has_online_presence else "Data storage and backup services"}
+- {"Analytics and marketing service providers" if uses_cookies else "Business analytics providers"}
+- Professional service providers (legal, accounting, consulting)
+
+### Legal Requirements
+We may disclose your information when required by law or to:
+- Comply with legal obligations and court orders
+- Protect and defend our rights and interests
+- Prevent fraud and ensure platform security
+- Respond to government requests and investigations
+
+### Business Transfers
+In the event of a merger, acquisition, or sale of our business, your information may be transferred to the new entity, subject to the same privacy protections.
+
+---
+
+## DATA SECURITY
+
+We implement industry-standard security measures to protect your personal information:
+
+### Technical Safeguards
+- {"SSL/TLS encryption for data transmission" if has_online_presence else "Encryption for data storage and transmission"}
+- Secure servers and protected databases
+- Regular security audits and vulnerability assessments
+- {"Multi-factor authentication for account access" if has_online_presence else "Access controls and authentication measures"}
+
+### Organizational Safeguards
+- Limited access on a need-to-know basis
+- Employee training on data protection
+- Clear data handling and retention policies
+- Incident response and breach notification procedures
+
+### Physical Safeguards
+- Secure facilities and equipment
+- {"Restricted access to servers and data centers" if has_online_presence else "Protected data storage locations"}
+- Proper disposal of physical media
+- Environmental controls and monitoring
+
+---
+
+## DATA RETENTION
+
+We retain your personal information for as long as necessary to fulfill the purposes outlined in this Privacy Policy, typically **{data_retention_period} days** unless:
+- A longer retention period is required by law
+- You request deletion of your information
+- The information is necessary for legal claims or compliance
+- {"You maintain an active account with us" if has_online_presence else "You continue to use our services"}
+
+---
+
+## YOUR PRIVACY RIGHTS
+
+Depending on your location, you may have the following rights regarding your personal information:
+
+### Access and Portability
+- Request access to your personal information
+- Receive a copy of your data in a portable format
+- {"Download your account information" if has_online_presence else "Request your service records"}
+
+### Correction and Updates
+- Correct inaccurate or incomplete information
+- Update your contact preferences
+- {"Modify your account settings" if has_online_presence else "Update your service preferences"}
+
+### Deletion and Restriction
+- Request deletion of your personal information
+- Restrict certain processing activities
+- {"Close your account and delete associated data" if has_online_presence else "Discontinue services and data processing"}
+
+### Objection and Withdrawal
+- Object to certain types of processing
+- Withdraw consent for optional data processing
+- Opt-out of marketing communications
+
+**To exercise these rights, please contact us using the information provided below.**
+
+---
+
+## CHILDREN'S PRIVACY
+
+Our services are not directed to children under the age of 13{" (or 16 in certain jurisdictions)" if location_country in ["European Union", "UK", "Germany"] else ""}. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately.
+
+---
+
+## INTERNATIONAL DATA TRANSFERS
+
+{"If you are located outside of " + location_country + ", please note that your information may be transferred to and processed in " + location_country + " where our servers and business operations are located. We ensure appropriate safeguards are in place for such transfers." if location_country != "India" else "Your information is primarily processed within India. If international transfers are necessary, we ensure appropriate legal safeguards are in place."}
+
+---
+
+## UPDATES TO THIS POLICY
+
+We may update this Privacy Policy periodically to reflect changes in our practices or legal requirements. We will notify you of material changes by:
+- {"Posting updates on our website" if has_online_presence else "Sending you direct notifications"}
+- Email notifications for significant changes
+- {"In-app notifications" if has_online_presence else "Service communications"}
+
+The updated policy will be effective immediately upon posting, and your continued use of our services constitutes acceptance of the revised terms.
+
+---
+
+## CONTACT INFORMATION
+
+If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
+
+**{business_name}**
+- **Email:** privacy@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name} Privacy Office, {location_country}
+- **Phone:** Contact us through the information provided on our website
+
+For {location_country}-specific privacy concerns or regulatory inquiries, please include your location in your correspondence.
+
+---
+
+**This Privacy Policy is compliant with applicable data protection laws including {"the Indian IT Act 2000, GDPR (where applicable), and " if location_country == "India" else ""}relevant privacy regulations in {location_country}.**
+
+*Last reviewed and updated: {current_date}*"""
+
+    elif policy_type == 'terms_conditions':
+        return f"""# TERMS AND CONDITIONS
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## ACCEPTANCE OF TERMS
+
+Welcome to **{business_name}**. These Terms and Conditions ("Terms") govern your use of our {business_type} services and {"website " + website_url if has_online_presence else "services"}. By accessing or using our services, you agree to be bound by these Terms.
+
+If you do not agree to these Terms, please do not use our services.
+
+---
+
+## DESCRIPTION OF SERVICES
+
+**{business_name}** is a {business_type} company operating in the {industry} industry. We provide:
+
+{"### Digital Services" + chr(10) + "- Online platform access and functionality" + chr(10) + "- User account management" + chr(10) + "- Digital content and resources" if has_online_presence else "### Business Services"}
+- {industry.title()} solutions and expertise
+- {"Payment processing and transaction services" if processes_payments else "Consultation and professional services"}
+- Customer support and technical assistance
+- {"Customized business solutions" if target_audience == "B2B" else "Consumer-focused services"}
+
+---
+
+## USER RESPONSIBILITIES
+
+### Account Management
+{"- Maintain accurate account information" + chr(10) + "- Protect your login credentials" + chr(10) + "- Notify us of unauthorized access" if has_online_presence else "- Provide accurate contact information" + chr(10) + "- Maintain communication with our team"}
+- Comply with applicable laws and regulations
+- Use services only for lawful purposes
+
+### Prohibited Activities
+You agree not to:
+- {"Violate any laws or infringe on others' rights" + chr(10) + "- Upload malicious content or spam" if has_online_presence else "Engage in fraudulent or deceptive practices"}
+- Interfere with our services or systems
+- {"Reverse engineer or copy our software" if has_online_presence else "Misuse proprietary information"}
+- {"Share account credentials with others" if has_online_presence else "Violate confidentiality agreements"}
+
+---
+
+## PAYMENT TERMS
+
+{"### Fees and Billing" + chr(10) + "- Service fees are clearly displayed before purchase" + chr(10) + "- Payments are processed securely through authorized providers" + chr(10) + "- All fees are exclusive of applicable taxes unless stated otherwise" + chr(10) + chr(10) + "### Refund Policy" + chr(10) + "- Refunds are subject to our separate Refund Policy" + chr(10) + "- Certain services may be non-refundable" + chr(10) + "- Dispute resolution procedures are available" if processes_payments else "### Service Fees" + chr(10) + "- Service fees are agreed upon before engagement" + chr(10) + "- Payment terms are specified in service agreements" + chr(10) + "- Late payment fees may apply as specified"}
+
+---
+
+## INTELLECTUAL PROPERTY
+
+### Our Rights
+- All content, trademarks, and intellectual property remain our property
+- {"Website design, software, and digital content are protected" if has_online_presence else "Service methodologies and proprietary processes are protected"}
+- You receive a limited license to use our services as intended
+
+### Your Rights
+- You retain ownership of content you provide to us
+- We may use your content to provide services as agreed
+- You grant us necessary licenses to deliver our services
+
+---
+
+## PRIVACY AND DATA PROTECTION
+
+Your privacy is important to us. Our data practices are governed by our Privacy Policy, which is incorporated into these Terms by reference. Key points:
+
+- We collect and process information as described in our Privacy Policy
+- {"We use cookies and tracking technologies with your consent" if uses_cookies else "We collect minimal necessary information for service delivery"}
+- {"We implement security measures to protect your data" if has_online_presence else "We maintain confidentiality of your business information"}
+- You have rights regarding your personal information
+
+---
+
+## DISCLAIMERS AND LIMITATIONS
+
+### Service Availability
+- Services are provided "as is" without warranties
+- {"We do not guarantee uninterrupted website availability" if has_online_presence else "We strive to provide reliable service delivery"}
+- Maintenance and updates may temporarily affect service access
+
+### Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+- Our liability is limited to the amount paid for services
+- We are not liable for indirect, incidental, or consequential damages
+- {"Force majeure events may affect service delivery" if business_type in ["manufacturing", "retail"] else "External factors beyond our control may impact services"}
+
+---
+
+## DISPUTE RESOLUTION
+
+### Governing Law
+These Terms are governed by the laws of {location_country}.
+
+### Resolution Process
+1. **Direct Communication:** Contact us first to resolve issues
+2. **Mediation:** Participate in good faith mediation if needed
+3. **Arbitration:** {"Binding arbitration for unresolved disputes" if location_country == "India" else "Legal proceedings in appropriate jurisdiction"}
+
+### Exceptions
+Certain disputes may be resolved in small claims court or through regulatory processes.
+
+---
+
+## TERMINATION
+
+### Your Right to Terminate
+- {"You may close your account at any time" if has_online_presence else "You may discontinue services with appropriate notice"}
+- {"Download your data before account closure" if has_online_presence else "Request your records before service termination"}
+
+### Our Right to Terminate
+We may suspend or terminate your access if you:
+- Violate these Terms or our policies
+- {"Engage in prohibited activities" if has_online_presence else "Breach service agreements"}
+- {"Fail to pay applicable fees" if processes_payments else "Violate professional conduct standards"}
+
+---
+
+## MODIFICATIONS
+
+We may update these Terms periodically. Changes will be effective:
+- {"Upon posting on our website" if has_online_presence else "Upon notification to you"}
+- After reasonable notice for material changes
+- Immediately for legal compliance updates
+
+Continued use of our services constitutes acceptance of updated Terms.
+
+---
+
+## CONTACT INFORMATION
+
+For questions about these Terms and Conditions:
+
+**{business_name}**
+- **Email:** legal@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name} Legal Department, {location_country}
+- {"**Phone:** Available through our website contact information" if has_online_presence else "**Phone:** Contact through provided business information"}
+
+---
+
+## ADDITIONAL PROVISIONS
+
+### Severability
+If any provision of these Terms is found unenforceable, the remaining provisions will continue in effect.
+
+### Entire Agreement
+These Terms, together with our Privacy Policy {"and any service-specific agreements" if business_type in ["services", "consulting"] else ""}, constitute the complete agreement between us.
+
+### Assignment
+We may assign these Terms in connection with a business transfer. You may not assign your rights without our consent.
+
+---
+
+**These Terms are compliant with applicable commercial laws in {location_country} and industry-specific regulations for {industry} businesses.**
+
+*Last reviewed and updated: {current_date}*"""
+
+    elif policy_type == 'refund_policy':
+        return f"""# REFUND POLICY
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## OVERVIEW
+
+At **{business_name}**, we are committed to customer satisfaction. This Refund Policy outlines the circumstances under which refunds may be granted for our {business_type} services {"and products" if business_type in ["retail", "e-commerce"] else ""}.
+
+This policy applies to all {"purchases made through our website " + website_url + " and " if has_online_presence else ""}services provided by {business_name}.
+
+---
+
+## REFUND ELIGIBILITY
+
+### Qualifying Circumstances
+{"Refunds may be granted in the following situations:" + chr(10) + "- Service delivery failure or non-performance" + chr(10) + "- Defective products or unsatisfactory service quality" if processes_payments else "Service adjustments may be considered for:"}
+- {"Technical issues preventing service access" if has_online_presence else "Service delivery issues beyond your control"}
+- {"Billing errors or duplicate charges" if processes_payments else "Billing discrepancies or errors"}
+- Cancellation within the specified timeframe
+- {"Product returns within the return window" if business_type in ["retail", "e-commerce"] else "Service modifications before delivery"}
+
+### Non-Refundable Services
+{"Certain services and products are non-refundable:" if processes_payments else "The following circumstances typically do not qualify for refunds:"}
+- {"Digital downloads after delivery" if has_online_presence else "Completed consulting services"}
+- {"Customized or personalized services" if business_type in ["services", "consulting"] else "Specialized solutions"}
+- {"Services used beyond the trial period" if has_online_presence else "Services substantially delivered"}
+- {"Third-party fees and processing charges" if processes_payments else "External costs incurred on your behalf"}
+
+---
+
+## REFUND TIMEFRAMES
+
+### Request Window
+{"- Standard services: 30 days from purchase" + chr(10) + "- Digital products: 14 days from delivery" + chr(10) + "- Subscription services: According to subscription terms" if processes_payments else "- Service engagements: Within 14 days of service commencement" + chr(10) + "- Consulting services: Before substantial work begins"}
+- {"Physical products: " + ("30 days from delivery" if business_type in ["retail", "e-commerce"] else "N/A") if business_type in ["retail", "e-commerce"] else "Project-based services: As specified in service agreement"}
+
+### Processing Time
+Once approved, refunds are typically processed:
+- {"Credit card refunds: 5-10 business days" if processes_payments else "Service credits: Immediate application to account"}
+- {"Bank transfer refunds: 3-7 business days" if processes_payments else "Cash refunds: 5-10 business days"}
+- {"Digital wallet refunds: 1-3 business days" if processes_payments else "Alternative compensation: As mutually agreed"}
+
+---
+
+## REFUND PROCESS
+
+### Step 1: Contact Us
+- **Email:** refunds@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Include:** {"Order number, purchase date, and reason for refund" if processes_payments else "Service details, engagement date, and refund reason"}
+- **Provide:** {"Screenshots or documentation if applicable" if has_online_presence else "Relevant documentation"}
+
+### Step 2: Review Process
+- We will acknowledge your request within {"24-48 hours" if has_online_presence else "2 business days"}
+- {"Review of purchase records and service usage" if processes_payments else "Assessment of service delivery and satisfaction"}
+- Additional information may be requested
+
+### Step 3: Decision Notification
+- Approval or denial notification within {"5-7 business days" if processes_payments else "7-10 business days"}
+- Clear explanation of decision and next steps
+- {"Refund processing timeline if approved" if processes_payments else "Resolution timeline if approved"}
+
+### Step 4: Refund Processing
+{"- Original payment method refund (preferred)" + chr(10) + "- Store credit or account credit (alternative)" + chr(10) + "- Bank transfer for certain payment methods" if processes_payments else "- Service credit for future engagements" + chr(10) + "- Cash refund where applicable" + chr(10) + "- Alternative compensation as agreed"}
+
+---
+
+## SPECIAL CIRCUMSTANCES
+
+### Subscription Services
+{"- Monthly subscriptions: Cancel anytime, no refund for current period" + chr(10) + "- Annual subscriptions: Pro-rated refund for unused months" + chr(10) + "- Free trials: No charges if canceled during trial" if has_online_presence else "- Ongoing service agreements: Refund for unused service periods" + chr(10) + "- Contract services: According to contract terms"}
+
+### Business Services
+{"- Consulting services: Refund for undelivered work only" + chr(10) + "- Custom solutions: Limited refund after work begins" + chr(10) + "- Training services: Refund before commencement only" if business_type in ["services", "consulting"] else "- Product sales: Standard return policy applies" + chr(10) + "- Service packages: Partial refunds for unused components"}
+
+### Exceptional Circumstances
+- Medical emergencies or hardship situations
+- {"Technical failures beyond user control" if has_online_presence else "Service provider unavailability"}
+- {"Force majeure events affecting service delivery" if business_type in ["services", "consulting"] else "External factors preventing service use"}
+
+---
+
+## CONDITIONS AND RESTRICTIONS
+
+### General Conditions
+{"- Products must be in original condition for returns" + chr(10) + "- Digital products must not be copied or shared" + chr(10) + "- Account must be in good standing" if business_type in ["retail", "e-commerce"] else "- Services must not be substantially utilized" + chr(10) + "- No breach of service terms" + chr(10) + "- Reasonable cause for refund request"}
+
+### Refund Limitations
+- {"Processing fees may not be refundable" if processes_payments else "Administrative costs may be deducted"}
+- {"Currency conversion fees are non-refundable" if processes_payments else "Third-party costs may not be refunded"}
+- Maximum refund amount is the original purchase price
+- {"Multiple refund requests may be subject to review" if processes_payments else "Repeated service issues will be investigated"}
+
+---
+
+## DISPUTE RESOLUTION
+
+### Internal Resolution
+1. Contact our customer service team first
+2. {"Escalation to management if needed" if business_type in ["services", "retail"] else "Discussion with service delivery team"}
+3. {"Review by our refund committee for complex cases" if processes_payments else "Case-by-case evaluation for unique situations"}
+
+### External Resolution
+If internal resolution is unsuccessful:
+- {"Dispute with payment provider (credit card company, etc.)" if processes_payments else "Professional mediation services"}
+- {"Consumer protection agency complaint" if target_audience == "B2C" else "Business dispute resolution services"}
+- {"Legal action as a last resort" if processes_payments else "Arbitration or legal consultation"}
+
+---
+
+## EXCHANGES AND STORE CREDIT
+
+### Exchange Options
+{"- Exchange for different products of equal value" + chr(10) + "- Upgrade to premium services (pay difference)" + chr(10) + "- Downgrade with partial refund" if business_type in ["retail", "e-commerce"] else "- Alternative service delivery methods" + chr(10) + "- Rescheduling of service appointments" + chr(10) + "- Modification of service scope"}
+
+### Store Credit
+{"- Credit valid for 12 months from issue date" + chr(10) + "- Can be applied to any products or services" + chr(10) + "- Non-transferable and non-refundable" if processes_payments else "- Credit applied to future service engagements" + chr(10) + "- Flexible application to different service types" + chr(10) + "- Reasonable validity period"}
+
+---
+
+## CONTACT INFORMATION
+
+For refund requests and questions:
+
+**{business_name} Customer Service**
+- **Email:** refunds@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Phone:** {"Available through our website contact information" if has_online_presence else "Contact through provided business information"}
+- **Address:** {business_name} Customer Service, {location_country}
+- **Hours:** {"Business hours as posted on our website" if has_online_presence else "Standard business hours"}
+
+### Escalation Contacts
+- **Manager:** manager@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Legal:** legal@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+
+---
+
+## POLICY UPDATES
+
+This Refund Policy may be updated to reflect:
+- Changes in business practices
+- Legal or regulatory requirements
+- {"Payment processor policy updates" if processes_payments else "Industry standard updates"}
+- Customer feedback and service improvements
+
+{"Updated policies will be posted on our website with effective dates." if has_online_presence else "Updated policies will be communicated directly to customers."}
+
+---
+
+**This Refund Policy complies with consumer protection laws in {location_country} {"and applicable online commerce regulations" if has_online_presence else "and relevant business service standards"}.**
+
+*Last reviewed and updated: {current_date}*"""
+
+    elif policy_type == 'cookie_policy':
+        if not uses_cookies and not has_online_presence:
+            return f"""# COOKIE POLICY
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## NOTICE
+
+**{business_name}** does not currently operate a website or use cookies and tracking technologies. This policy is provided for informational purposes and would apply if we implement web-based services in the future.
+
+As a {business_type} business in the {industry} industry, we focus on direct service delivery {"and do not currently collect digital tracking data" if not collects_personal_data else "while maintaining your privacy"}.
+
+If our operations change to include website services or digital tracking, this policy will be updated accordingly and you will be notified of any changes.
+
+---
+
+## CONTACT INFORMATION
+
+For questions about our current data practices:
+
+**{business_name}**
+- **Email:** privacy@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name}, {location_country}
+
+*Last reviewed and updated: {current_date}*"""
+        
+        return f"""# COOKIE POLICY
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## INTRODUCTION
+
+This Cookie Policy explains how **{business_name}** ("we", "us", or "our") uses cookies and similar tracking technologies on our website {website_url} {"and related digital services" if has_online_presence else ""}.
+
+This policy should be read alongside our Privacy Policy, which explains how we collect, use, and protect your personal information.
+
+---
+
+## WHAT ARE COOKIES
+
+Cookies are small text files that are placed on your device (computer, smartphone, tablet) when you visit websites. They are widely used to make websites work more efficiently and to provide information to website owners.
+
+### Types of Cookies We Use
+
+#### Essential Cookies
+These cookies are necessary for our website to function properly:
+- **Session cookies:** Enable core website functionality
+- **Security cookies:** Protect against fraud and maintain security
+- **Load balancing cookies:** Ensure optimal website performance
+- **Authentication cookies:** Keep you logged in to your account
+
+#### Analytics Cookies
+These help us understand how visitors use our website:
+- **Google Analytics:** {"Website traffic and user behavior analysis" if has_online_presence else "Basic usage statistics"}
+- **Performance monitoring:** Page load times and error tracking
+- **Usage patterns:** Most popular content and navigation paths
+- **Demographic data:** {"General location and device information" if target_audience == "B2C" else "Business user analytics"}
+
+#### Functionality Cookies
+These enhance your experience on our website:
+- **Preference cookies:** Remember your language and region settings
+- **Customization cookies:** {"Personalize content and recommendations" if target_audience == "B2C" else "Customize business interface"}
+- **Shopping cart cookies:** {"Remember items in your cart" if processes_payments else "Remember service selections"}
+- **Form data cookies:** Save partially completed forms
+
+#### Marketing Cookies
+{"These cookies track your browsing activity for advertising purposes:" + chr(10) + "- **Advertising networks:** Display relevant ads on other websites" + chr(10) + "- **Social media pixels:** Enable social sharing and targeted advertising" + chr(10) + "- **Retargeting cookies:** Show you relevant ads after visiting our site" + chr(10) + "- **Conversion tracking:** Measure effectiveness of marketing campaigns" if target_audience == "B2C" else "These cookies support our business marketing efforts:" + chr(10) + "- **Lead tracking:** Monitor business inquiry sources" + chr(10) + "- **Campaign analytics:** Measure marketing effectiveness" + chr(10) + "- **Professional networks:** LinkedIn and industry platform integration" + chr(10) + "- **B2B targeting:** Relevant content for business users"}
+
+---
+
+## HOW WE USE COOKIES
+
+### Website Functionality
+- {"Maintain your login session and preferences" if has_online_presence else "Enable core service functionality"}
+- {"Process online transactions securely" if processes_payments else "Handle service requests efficiently"}
+- Remember your language and location preferences
+- {"Provide personalized content and recommendations" if target_audience == "B2C" else "Customize business solutions display"}
+
+### Analytics and Performance
+- Measure website traffic and user engagement
+- {"Identify popular products and services" if business_type in ["retail", "e-commerce"] else "Understand service demand patterns"}
+- {"Monitor website performance and loading speeds" if has_online_presence else "Track digital service performance"}
+- Generate reports on website usage and effectiveness
+
+### Marketing and Advertising
+{"- Display targeted advertisements on other websites" + chr(10) + "- Measure the effectiveness of advertising campaigns" + chr(10) + "- Provide personalized content and offers" + chr(10) + "- Enable social media sharing and integration" if target_audience == "B2C" else "- Track business lead generation sources" + chr(10) + "- Measure marketing campaign effectiveness" + chr(10) + "- Customize content for business users" + chr(10) + "- Integrate with professional networking platforms"}
+
+### Security and Fraud Prevention
+- Detect and prevent fraudulent activity
+- {"Secure online payment processing" if processes_payments else "Protect sensitive business information"}
+- Monitor for suspicious behavior and bot traffic
+- Maintain website security and integrity
+
+---
+
+## THIRD-PARTY COOKIES
+
+We work with trusted third-party service providers who may set cookies on our website:
+
+### Analytics Providers
+- **Google Analytics:** {"Website traffic analysis and user insights" if has_online_presence else "Basic digital analytics"}
+- **Hotjar:** {"User experience analysis and heatmaps" if has_online_presence else "Digital user experience monitoring"}
+
+### Advertising Partners
+{"- **Google Ads:** Targeted advertising and conversion tracking" + chr(10) + "- **Facebook Pixel:** Social media advertising and analytics" + chr(10) + "- **LinkedIn Insight:** Professional network advertising" if target_audience == "B2C" else "- **LinkedIn Marketing:** Business-to-business advertising" + chr(10) + "- **Google Ads:** Professional services advertising" + chr(10) + "- **Industry platforms:** Sector-specific advertising networks"}
+
+### Payment Processors
+{"- **Stripe/PayPal:** Secure payment processing cookies" + chr(10) + "- **Banking partners:** Transaction security and fraud prevention" if processes_payments else "- **Payment providers:** Secure transaction processing when applicable"}
+
+### Communication Tools
+- **Live chat services:** Customer support functionality
+- {"**Email marketing:** Newsletter and communication tracking" if target_audience == "B2C" else "**Business communication:** Professional correspondence tracking"}
+
+---
+
+## YOUR COOKIE CHOICES
+
+### Browser Settings
+You can control cookies through your browser settings:
+
+#### Chrome
+1. Go to Settings > Privacy and security > Cookies and other site data
+2. Choose your preferred cookie settings
+3. {"Manage exceptions for specific websites" if has_online_presence else "Configure site-specific preferences"}
+
+#### Firefox
+1. Go to Options > Privacy & Security > Cookies and Site Data
+2. Select your cookie preferences
+3. {"Use custom settings for enhanced control" if has_online_presence else "Configure tracking protection"}
+
+#### Safari
+1. Go to Preferences > Privacy > Cookies and website data
+2. Choose your blocking preferences
+3. {"Manage website-specific settings" if has_online_presence else "Configure cross-site tracking prevention"}
+
+#### Edge
+1. Go to Settings > Site permissions > Cookies and site data
+2. Configure your cookie preferences
+3. {"Block or allow specific sites" if has_online_presence else "Manage site permissions"}
+
+### Opt-Out Tools
+{"- **Google Analytics Opt-out:** Use the Google Analytics opt-out browser add-on" + chr(10) + "- **Advertising opt-outs:** Visit NAI or DAA opt-out pages" + chr(10) + "- **Social media:** Adjust privacy settings on social platforms" if target_audience == "B2C" else "- **Business analytics:** Contact us for opt-out assistance" + chr(10) + "- **Professional networks:** Manage privacy settings on LinkedIn" + chr(10) + "- **Marketing communications:** Use unsubscribe links in emails"}
+
+### Impact of Blocking Cookies
+If you disable cookies, {"some website functionality may be limited:" + chr(10) + "- You may need to log in repeatedly" + chr(10) + "- Your preferences won't be saved" + chr(10) + "- Some features may not work properly" + chr(10) + "- Personalization will be reduced" if has_online_presence else "some digital services may be affected:" + chr(10) + "- Session management may be impacted" + chr(10) + "- Service preferences won't be remembered" + chr(10) + "- Some features may not function optimally"}
+
+---
+
+## MOBILE APPS AND DEVICES
+
+{"If we develop mobile applications, they may use similar tracking technologies:" + chr(10) + "- **Device identifiers:** For app functionality and analytics" + chr(10) + "- **Push notification tokens:** For communication" + chr(10) + "- **Location data:** If relevant to services (with permission)" + chr(10) + "- **App usage analytics:** To improve functionality" if has_online_presence else "Our digital services may include mobile-optimized interfaces:" + chr(10) + "- **Mobile web cookies:** Similar to desktop cookie usage" + chr(10) + "- **Device-adaptive content:** Optimized for mobile devices" + chr(10) + "- **Mobile analytics:** Understanding mobile user patterns"}
+
+---
+
+## INTERNATIONAL TRANSFERS
+
+{"Cookie data may be processed in different countries where our service providers operate. We ensure appropriate safeguards are in place for international data transfers, in compliance with " + location_country + " privacy laws." if location_country != "United States" else "Cookie data is primarily processed within the United States, with appropriate protections for international visitors."}
+
+---
+
+## UPDATES TO THIS POLICY
+
+We may update this Cookie Policy to reflect:
+- Changes in cookie usage or technologies
+- New third-party partnerships
+- Legal or regulatory requirements
+- User feedback and privacy best practices
+
+{"Updated policies will be posted on our website with clear notification of changes." if has_online_presence else "Updated policies will be communicated to users of our digital services."}
+
+---
+
+## CONTACT INFORMATION
+
+For questions about our cookie practices:
+
+**{business_name} Privacy Team**
+- **Email:** privacy@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name} Privacy Office, {location_country}
+- {"**Online form:** Available through our website contact page" if has_online_presence else "**Phone:** Contact through provided business information"}
+
+### Data Protection Officer
+{"For EU/UK residents or complex privacy questions:" + chr(10) + "- **Email:** dpo@" + website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0] if location_country in ["European Union", "UK", "Germany"] else "For privacy-related concerns:" + chr(10) + "- **Email:** privacy@" + website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+
+---
+
+## CONSENT MANAGEMENT
+
+{"We use a cookie consent management system that allows you to:" + chr(10) + "- Accept or reject different types of cookies" + chr(10) + "- Change your preferences at any time" + chr(10) + "- Access detailed information about each cookie category" + chr(10) + "- Contact us with questions about cookie usage" if has_online_presence else "We obtain consent for cookie usage through:" + chr(10) + "- Clear notice when you first visit our digital services" + chr(10) + "- Options to manage your preferences" + chr(10) + "- Ongoing ability to change your settings" + chr(10) + "- Transparent information about cookie purposes"}
+
+**Your continued use of our {"website" if has_online_presence else "digital services"} after accepting this policy indicates your consent to our cookie usage as described above.**
+
+---
+
+**This Cookie Policy complies with applicable privacy laws including {"GDPR, " if location_country in ["European Union", "UK", "Germany"] else ""}ePrivacy directives, {"and " + location_country + " digital privacy regulations" if location_country != "United States" else "and US privacy legislation"}.**
+
+*Last reviewed and updated: {current_date}*"""
+
+    else:
+        return f"""# {policy_type.replace('_', ' ').title()}
+
+**Effective Date:** {current_date}  
+**Last Updated:** {current_date}
+
+---
+
+## POLICY DOCUMENT
+
+This {policy_type.replace('_', ' ').title()} for **{business_name}** is currently being developed. 
+
+As a {business_type} business operating in the {industry} industry{"" if location_country == "India" else f" with operations in {location_country}"}, we are committed to maintaining comprehensive legal documentation.
+
+This document will be updated with detailed policy content specific to your business requirements and applicable legal standards.
+
+---
+
+## CONTACT INFORMATION
+
+For questions about this policy:
+
+**{business_name}**
+- **Email:** legal@{website_url.replace('www.', '').replace('http://', '').replace('https://', '').split('/')[0]}
+- **Address:** {business_name}, {location_country}
+
+*Policy under development - Last updated: {current_date}*"""
+
 @app.post("/generate-policies")
 async def generate_policies(payload: dict, current_user: str = Depends(get_current_user)):
     """Generate policy documents based on provided business details and requested policy types.
@@ -719,12 +1482,7 @@ async def generate_policies(payload: dict, current_user: str = Depends(get_curre
 
         policies = {}
         for p in policy_types:
-            policies[p] = (
-                f"# {p.replace('_',' ').title()}\n\n"
-                f"Generated for: {business.get('business_name','Your Business')}\n"
-                f"Language: {language}\n\n"
-                "This is placeholder content. Replace with AI-generated text once implemented."
-            )
+            policies[p] = generate_policy_content(p, business, language)
 
         return {"success": True, "policies": policies}
     except HTTPException:
