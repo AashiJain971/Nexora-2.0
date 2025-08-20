@@ -68,7 +68,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8001/get-business', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/get-business', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -133,7 +133,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8001/register-business', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/register-business', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

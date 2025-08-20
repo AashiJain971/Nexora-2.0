@@ -140,7 +140,7 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
 
   const loadUserPolicies = async () => {
     try {
-      const response = await fetch('http://localhost:8001/insurance/policies', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/insurance/policies', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -160,7 +160,7 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
   const loadExpiringPolicies = async () => {
     try {
       // Reuse all policies and filter locally by days_to_expiry if backend provided; else compute
-      const response = await fetch('http://localhost:8001/insurance/policies', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/insurance/policies', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -194,7 +194,7 @@ export function InsuranceHubModal({ open, onOpenChange }: InsuranceHubModalProps
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8001/insurance/assess', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/insurance/assess', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

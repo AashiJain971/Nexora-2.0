@@ -84,7 +84,7 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
       console.log('⚠️ No token available for fetching invoices, using test endpoint...');
       // Fall back to test endpoint when no token is available
       try {
-        const response = await fetch('http://localhost:8001/test/invoices', {
+        const response = await fetch('https://nexora-2-0-6.onrender.com/test/invoices', {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -111,9 +111,9 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
     setLoading(true);
     try {
       console.log('🔍 Fetching invoices with token:', token?.substring(0, 20) + '...');
-      console.log('🌐 Making request to: http://localhost:8001/user/invoices');
+      console.log('🌐 Making request to: https://nexora-2-0-6.onrender.com/user/invoices');
       
-      const response = await fetch('http://localhost:8001/user/invoices', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/user/invoices', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -220,7 +220,7 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
     if (!token) return;
     
     try {
-      const response = await fetch('http://localhost:8001/add-sample-invoices', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/add-sample-invoices', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

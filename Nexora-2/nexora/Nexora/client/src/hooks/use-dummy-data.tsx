@@ -28,7 +28,7 @@ export function useDummyData() {
       formData.append("image", file);
 
       // Step 1: Extract invoice information
-      const extractRes = await fetch("http://localhost:8001/extract-invoice", {
+      const extractRes = await fetch("https://nexora-2-0-6.onrender.com/extract-invoice", {
         method: "POST",
         body: formData,
       });
@@ -52,7 +52,7 @@ export function useDummyData() {
       };
 
       // Step 3: Call credit score API
-      const scoreRes = await fetch("http://localhost:8001/calculate-credit-score", {
+      const scoreRes = await fetch("https://nexora-2-0-6.onrender.com/calculate-credit-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(creditScorePayload),

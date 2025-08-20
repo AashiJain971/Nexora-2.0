@@ -40,7 +40,7 @@ export function SignupModal({ open, onOpenChange }: SignupModalProps) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:8001/register', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

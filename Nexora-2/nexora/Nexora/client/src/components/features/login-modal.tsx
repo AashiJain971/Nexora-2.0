@@ -41,7 +41,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8001/login', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

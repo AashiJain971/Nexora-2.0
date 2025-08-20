@@ -76,7 +76,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8001/get-business', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/get-business', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8001/get-policies', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/get-policies', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -140,7 +140,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     setIsGenerating(true);
 
     try {
-      const response = await fetch('http://localhost:8001/generate-policies', {
+      const response = await fetch('https://nexora-2-0-6.onrender.com/generate-policies', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -186,7 +186,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     if (!confirm('Are you sure you want to delete this policy?')) return;
 
     try {
-      const response = await fetch(`http://localhost:8001/delete-policy/${policyId}`, {
+      const response = await fetch(`https://nexora-2-0-6.onrender.com/delete-policy/${policyId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
