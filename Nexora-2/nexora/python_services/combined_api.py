@@ -1905,6 +1905,78 @@ async def list_policy_reminders(current_user: str = Depends(get_current_user)):
         print(f"❌ List reminders error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list reminders: {str(e)}")
 
+# ----------------- Blockchain Loan Endpoints ----------------- #
+
+# Import blockchain loan functions
+try:
+    from blockchain_loan_api import (
+        request_blockchain_loan,
+        approve_blockchain_loan,
+        get_loan_status,
+        get_escrow_balance,
+        calculate_max_loan_amount_api,
+        get_user_loans,
+        LoanRequestModel,
+        LoanApprovalModel,
+        BlockchainLoanResponse,
+        LoanStatusResponse
+    )
+    blockchain_available = True
+    print("✅ Blockchain loan API imported successfully")
+except ImportError as e:
+    print(f"⚠️ Blockchain loan API not available: {e}")
+    blockchain_available = False
+
+@app.post("/blockchain/request-loan")
+async def blockchain_request_loan(loan_request: LoanRequestModel, current_user: str = Depends(get_current_user)):
+    """Request a blockchain-based loan"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await request_blockchain_loan(loan_request, current_user, supabase, GROQ_API_KEY, calculate_credit_score_main)
+
+@app.post("/blockchain/approve-loan")
+async def blockchain_approve_loan(approval: LoanApprovalModel, current_user: str = Depends(get_current_user)):
+    """Approve a blockchain loan (admin only)"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await approve_blockchain_loan(approval, current_user, supabase)
+
+@app.get("/blockchain/loan-status/{loan_id}")
+async def blockchain_loan_status(loan_id: int):
+    """Get loan status from blockchain"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await get_loan_status(loan_id)
+
+@app.get("/blockchain/escrow-balance")
+async def blockchain_escrow_balance():
+    """Get current escrow balance"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await get_escrow_balance()
+
+@app.get("/blockchain/max-loan-amount/{credit_score}")
+async def blockchain_max_loan_amount(credit_score: int):
+    """Calculate maximum loan amount based on credit score"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await calculate_max_loan_amount_api(credit_score)
+
+@app.get("/blockchain/my-loans")
+async def blockchain_user_loans(current_user: str = Depends(get_current_user)):
+    """Get all blockchain loans for the current user"""
+    if not blockchain_available:
+        raise HTTPException(status_code=503, detail="Blockchain functionality not available")
+    return await get_user_loans(current_user, supabase)
+
+@app.get("/blockchain/status")
+async def blockchain_status():
+    """Check blockchain service status"""
+    return {
+        "blockchain_available": blockchain_available,
+        "message": "Blockchain service is ready" if blockchain_available else "Blockchain service not available"
+    }
+
 if __name__ == "__main__":
     print("🚀 Starting Nexora Credit Score API with Supabase Database...")
     uvicorn.run("combined_api:app", host="0.0.0.0", port=8001, reload=True)

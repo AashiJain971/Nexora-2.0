@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
-import * as dummyData from '@/lib/dummy-data';
+import { useState, useCallback } from "react";
+import * as dummyData from "@/lib/dummy-data";
 
 export function useDummyData() {
   const [isLoading, setIsLoading] = useState(false);
 
   const simulateApiCall = useCallback(async (delay = 1000) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     setIsLoading(false);
   }, []);
 
@@ -28,17 +28,23 @@ export function useDummyData() {
       formData.append("image", file);
 
       // Step 1: Extract invoice information
-      const extractRes = await fetch("https://nexora-2-0-6.onrender.com/extract-invoice", {
-        method: "POST",
-        body: formData,
-      });
-      if (!extractRes.ok) throw new Error(`API Error: ${extractRes.status} ${extractRes.statusText}`);
+      const extractRes = await fetch(
+        "https://nexora-2-0-6.onrender.com/extract-invoice",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!extractRes.ok)
+        throw new Error(
+          `API Error: ${extractRes.status} ${extractRes.statusText}`
+        );
       const data = await extractRes.json();
       const invoice = data.invoice_details;
 
       // Step 2: Prepare credit model payload
       const pending = invoice.total_amount_pending ?? 0;
-      const paid = invoice.total_amount_paid ?? (invoice.total_amount - pending);
+      const paid = invoice.total_amount_paid ?? invoice.total_amount - pending;
 
       const creditScorePayload = {
         no_of_invoices: 1,
@@ -52,12 +58,18 @@ export function useDummyData() {
       };
 
       // Step 3: Call credit score API
-      const scoreRes = await fetch("https://nexora-2-0-6.onrender.com/calculate-credit-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(creditScorePayload),
-      });
-      if (!scoreRes.ok) throw new Error(`Credit Score API Error: ${scoreRes.status} ${scoreRes.statusText}`);
+      const scoreRes = await fetch(
+        "https://nexora-2-0-6.onrender.com/calculate-credit-score",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(creditScorePayload),
+        }
+      );
+      if (!scoreRes.ok)
+        throw new Error(
+          `Credit Score API Error: ${scoreRes.status} ${scoreRes.statusText}`
+        );
       const scoreData = await scoreRes.json();
       const csAnalysis = scoreData.credit_score_analysis;
 
@@ -81,7 +93,9 @@ export function useDummyData() {
           factorBreakdown: csAnalysis.factor_breakdown,
           detailedAnalysis: csAnalysis.detailed_analysis,
           recommendations: csAnalysis.recommendations,
-          loanEligibility: invoice.total_amount ? invoice.total_amount * 0.6 : 0,
+          loanEligibility: invoice.total_amount
+            ? invoice.total_amount * 0.6
+            : 0,
         },
       };
     } catch (error) {
@@ -95,30 +109,39 @@ export function useDummyData() {
     }
   }, []);
 
-  const simulateLoanApplication = useCallback(async (loanId: string) => {
-    await simulateApiCall(2000);
-    return {
-      success: true,
-      applicationId: `APP-${Date.now()}`,
-      status: "submitted",
-    };
-  }, [simulateApiCall]);
+  const simulateLoanApplication = useCallback(
+    async (loanId: string) => {
+      await simulateApiCall(2000);
+      return {
+        success: true,
+        applicationId: `APP-${Date.now()}`,
+        status: "submitted",
+      };
+    },
+    [simulateApiCall]
+  );
 
-  const simulateProductListing = useCallback(async (productData: any) => {
-    await simulateApiCall(1500);
-    return {
-      success: true,
-      productId: `PROD-${Date.now()}`,
-    };
-  }, [simulateApiCall]);
+  const simulateProductListing = useCallback(
+    async (productData: any) => {
+      await simulateApiCall(1500);
+      return {
+        success: true,
+        productId: `PROD-${Date.now()}`,
+      };
+    },
+    [simulateApiCall]
+  );
 
-  const simulateMilestoneRelease = useCallback(async (milestoneId: number) => {
-    await simulateApiCall(2500);
-    return {
-      success: true,
-      transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
-    };
-  }, [simulateApiCall]);
+  const simulateMilestoneRelease = useCallback(
+    async (milestoneId: number) => {
+      await simulateApiCall(2500);
+      return {
+        success: true,
+        transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
+      };
+    },
+    [simulateApiCall]
+  );
 
   const getRandomAIResponse = useCallback(() => {
     const responses = dummyData.dummyAIResponses;

@@ -47,3 +47,9 @@ typing-inspection==0.4.1
 typing_extensions==4.14.1
 uvicorn==0.35.0
 websockets==15.0.1
+
+# Blockchain dependencies
+web3==7.13.0
+eth-abi==5.2.0
+eth-account==0.13.7
+aiohttp==3.12.15

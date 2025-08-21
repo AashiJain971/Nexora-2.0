@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import BusinessForm from './BusinessForm';
-import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Badge } from './ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { CheckCircle, FileText, Building, Download, Eye, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import BusinessForm from "./BusinessForm";
+import { Button } from "./ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
+  CheckCircle,
+  FileText,
+  Building,
+  Download,
+  Eye,
+  Trash2,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 
 interface PolicyGeneratorProps {}
 
@@ -37,34 +52,58 @@ interface GeneratedPolicy {
 
 const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
   const { token } = useAuth();
-  const [currentStep, setCurrentStep] = useState<'business' | 'generate' | 'view'>('business');
-  const [businessData, setBusinessData] = useState<BusinessDetails | null>(null);
-  const [selectedPolicies, setSelectedPolicies] = useState<string[]>(['privacy_policy']);
-  const [language, setLanguage] = useState('en');
-  const [generatedPolicies, setGeneratedPolicies] = useState<{ [key: string]: string }>({});
+  const [currentStep, setCurrentStep] = useState<
+    "business" | "generate" | "view"
+  >("business");
+  const [businessData, setBusinessData] = useState<BusinessDetails | null>(
+    null
+  );
+  const [selectedPolicies, setSelectedPolicies] = useState<string[]>([
+    "privacy_policy",
+  ]);
+  const [language, setLanguage] = useState("en");
+  const [generatedPolicies, setGeneratedPolicies] = useState<{
+    [key: string]: string;
+  }>({});
   // Always keep this as an array; never allow undefined to avoid runtime errors
   const [savedPolicies, setSavedPolicies] = useState<GeneratedPolicy[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const policyTypes = [
-    { value: 'privacy_policy', label: 'Privacy Policy', description: 'How you collect, use, and protect user data' },
-    { value: 'terms_conditions', label: 'Terms & Conditions', description: 'Rules and guidelines for using your service' },
-    { value: 'refund_policy', label: 'Refund Policy', description: 'Your refund and return policies' },
-    { value: 'cookie_policy', label: 'Cookie Policy', description: 'How you use cookies and tracking technologies' }
+    {
+      value: "privacy_policy",
+      label: "Privacy Policy",
+      description: "How you collect, use, and protect user data",
+    },
+    {
+      value: "terms_conditions",
+      label: "Terms & Conditions",
+      description: "Rules and guidelines for using your service",
+    },
+    {
+      value: "refund_policy",
+      label: "Refund Policy",
+      description: "Your refund and return policies",
+    },
+    {
+      value: "cookie_policy",
+      label: "Cookie Policy",
+      description: "How you use cookies and tracking technologies",
+    },
   ];
 
   const languages = [
-    { value: 'en', label: 'English' },
-    { value: 'hi', label: 'हिन्दी (Hindi)' },
-    { value: 'es', label: 'Español (Spanish)' },
-    { value: 'fr', label: 'Français (French)' }
+    { value: "en", label: "English" },
+    { value: "hi", label: "हिन्दी (Hindi)" },
+    { value: "es", label: "Español (Spanish)" },
+    { value: "fr", label: "Français (French)" },
   ];
 
   const steps = [
-    { id: 'business', name: 'Business Details', icon: Building },
-    { id: 'generate', name: 'Generate Policies', icon: FileText },
-    { id: 'view', name: 'View & Download', icon: Eye }
+    { id: "business", name: "Business Details", icon: Building },
+    { id: "generate", name: "Generate Policies", icon: FileText },
+    { id: "view", name: "View & Download", icon: Eye },
   ];
 
   useEffect(() => {
@@ -76,12 +115,15 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/get-business', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/get-business",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const result = await response.json();
@@ -90,7 +132,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
         }
       }
     } catch (error) {
-      console.log('No existing business data found');
+      console.log("No existing business data found");
     }
   };
 
@@ -98,38 +140,41 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/get-policies', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/get-policies",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-            const data = Array.isArray(result.data) ? result.data : [];
-            setSavedPolicies(data);
+          const data = Array.isArray(result.data) ? result.data : [];
+          setSavedPolicies(data);
         } else {
-            setSavedPolicies([]); // ensure array
+          setSavedPolicies([]); // ensure array
         }
       } else {
         setSavedPolicies([]);
       }
     } catch (error) {
-      console.log('No existing policies found');
+      console.log("No existing policies found");
     }
   };
 
   const handleBusinessSubmit = (data: BusinessDetails) => {
     setBusinessData(data);
-    setCurrentStep('generate');
+    setCurrentStep("generate");
   };
 
   const handlePolicyToggle = (policyType: string) => {
-    setSelectedPolicies(prev => 
-      prev.includes(policyType) 
-        ? prev.filter(p => p !== policyType)
+    setSelectedPolicies((prev) =>
+      prev.includes(policyType)
+        ? prev.filter((p) => p !== policyType)
         : [...prev, policyType]
     );
   };
@@ -140,42 +185,47 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
     setIsGenerating(true);
 
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/generate-policies', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          business_details: businessData,
-          policy_types: selectedPolicies,
-          language: language
-        })
-      });
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/generate-policies",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            business_details: businessData,
+            policy_types: selectedPolicies,
+            language: language,
+          }),
+        }
+      );
 
       const result = await response.json();
 
       if (response.ok && result.success) {
         setGeneratedPolicies(result.policies);
-        setCurrentStep('view');
+        setCurrentStep("view");
         await loadExistingPolicies(); // Refresh saved policies
       } else {
-        throw new Error(result.detail || 'Failed to generate policies');
+        throw new Error(result.detail || "Failed to generate policies");
       }
     } catch (error) {
-      console.error('Error generating policies:', error);
-      alert('Failed to generate policies. Please try again.');
+      console.error("Error generating policies:", error);
+      alert("Failed to generate policies. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
   const downloadPolicy = (policyType: string, content: string) => {
-    const blob = new Blob([content], { type: 'text/markdown' });
+    const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${businessData?.business_name || 'Business'}_${policyType}.md`;
+    a.download = `${
+      businessData?.business_name || "Business"
+    }_${policyType}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -183,26 +233,29 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
   };
 
   const deletePolicy = async (policyId: string) => {
-    if (!confirm('Are you sure you want to delete this policy?')) return;
+    if (!confirm("Are you sure you want to delete this policy?")) return;
 
     try {
-      const response = await fetch(`https://nexora-2-0-6.onrender.com/delete-policy/${policyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `https://nexora-2-0-6.onrender.com/delete-policy/${policyId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         await loadExistingPolicies();
-        alert('Policy deleted successfully');
+        alert("Policy deleted successfully");
       } else {
-        throw new Error('Failed to delete policy');
+        throw new Error("Failed to delete policy");
       }
     } catch (error) {
-      console.error('Error deleting policy:', error);
-      alert('Failed to delete policy');
+      console.error("Error deleting policy:", error);
+      alert("Failed to delete policy");
     }
   };
 
@@ -226,9 +279,10 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
-                const isCompleted = 
-                  (step.id === 'business' && businessData) ||
-                  (step.id === 'generate' && Object.keys(generatedPolicies).length > 0);
+                const isCompleted =
+                  (step.id === "business" && businessData) ||
+                  (step.id === "generate" &&
+                    Object.keys(generatedPolicies).length > 0);
 
                 return (
                   <div key={step.id} className="flex items-center">
@@ -236,14 +290,21 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                       <div
                         className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-colors cursor-pointer ${
                           isActive
-                            ? 'border-teal-accent bg-teal-accent text-background'
+                            ? "border-teal-accent bg-teal-accent text-background"
                             : isCompleted
-                            ? 'border-green-accent bg-green-accent text-background'
-                            : 'border-muted-foreground bg-background text-muted-foreground'
+                            ? "border-green-accent bg-green-accent text-background"
+                            : "border-muted-foreground bg-background text-muted-foreground"
                         }`}
                         onClick={() => {
-                          if (step.id === 'business' || (step.id === 'generate' && businessData) || (step.id === 'view' && Object.keys(generatedPolicies).length > 0)) {
-                            setCurrentStep(step.id as 'business' | 'generate' | 'view');
+                          if (
+                            step.id === "business" ||
+                            (step.id === "generate" && businessData) ||
+                            (step.id === "view" &&
+                              Object.keys(generatedPolicies).length > 0)
+                          ) {
+                            setCurrentStep(
+                              step.id as "business" | "generate" | "view"
+                            );
                           }
                         }}
                       >
@@ -256,10 +317,10 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                       <span
                         className={`mt-2 text-sm font-medium ${
                           isActive
-                            ? 'text-teal-accent'
+                            ? "text-teal-accent"
                             : isCompleted
-                            ? 'text-green-accent'
-                            : 'text-muted-foreground'
+                            ? "text-green-accent"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {step.name}
@@ -275,7 +336,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
           </div>
 
           {/* Step Content */}
-          {currentStep === 'business' && (
+          {currentStep === "business" && (
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -293,7 +354,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
             </Card>
           )}
 
-          {currentStep === 'generate' && (
+          {currentStep === "generate" && (
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -309,15 +370,17 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
               <CardContent className="space-y-8">
                 {/* Policy Selection */}
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">Select Policies to Generate</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">
+                    Select Policies to Generate
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {policyTypes.map(policy => (
+                    {policyTypes.map((policy) => (
                       <div
                         key={policy.value}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                           selectedPolicies.includes(policy.value)
-                            ? 'border-teal-accent bg-teal-accent/10'
-                            : 'border-border hover:border-teal-accent/50'
+                            ? "border-teal-accent bg-teal-accent/10"
+                            : "border-border hover:border-teal-accent/50"
                         }`}
                         onClick={() => handlePolicyToggle(policy.value)}
                       >
@@ -328,9 +391,13 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                             onChange={() => handlePolicyToggle(policy.value)}
                             className="h-4 w-4 text-teal-accent focus:ring-teal-accent border-border rounded mr-3"
                           />
-                          <h4 className="font-semibold text-foreground">{policy.label}</h4>
+                          <h4 className="font-semibold text-foreground">
+                            {policy.label}
+                          </h4>
                         </div>
-                        <p className="text-sm text-muted-foreground">{policy.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {policy.description}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -338,14 +405,18 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
 
                 {/* Language Selection */}
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">Language</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">
+                    Language
+                  </h3>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger className="w-full max-w-xs bg-background border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border">
-                      {languages.map(lang => (
-                        <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -354,14 +425,46 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                 {/* Business Summary */}
                 {businessData && (
                   <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                    <h3 className="text-lg font-semibold mb-3 text-foreground">Business Summary</h3>
+                    <h3 className="text-lg font-semibold mb-3 text-foreground">
+                      Business Summary
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                      <div><strong className="text-foreground">Type:</strong> <span className="text-muted-foreground">{businessData.business_type}</span></div>
-                      <div><strong className="text-foreground">Industry:</strong> <span className="text-muted-foreground">{businessData.industry}</span></div>
-                      <div><strong className="text-foreground">Location:</strong> <span className="text-muted-foreground">{businessData.location_country}</span></div>
-                      <div><strong className="text-foreground">Target:</strong> <span className="text-muted-foreground">{businessData.target_audience}</span></div>
-                      <div><strong className="text-foreground">Online:</strong> <span className="text-muted-foreground">{businessData.has_online_presence ? 'Yes' : 'No'}</span></div>
-                      <div><strong className="text-foreground">Payments:</strong> <span className="text-muted-foreground">{businessData.processes_payments ? 'Yes' : 'No'}</span></div>
+                      <div>
+                        <strong className="text-foreground">Type:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.business_type}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-foreground">Industry:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.industry}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-foreground">Location:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.location_country}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-foreground">Target:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.target_audience}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-foreground">Online:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.has_online_presence ? "Yes" : "No"}
+                        </span>
+                      </div>
+                      <div>
+                        <strong className="text-foreground">Payments:</strong>{" "}
+                        <span className="text-muted-foreground">
+                          {businessData.processes_payments ? "Yes" : "No"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -370,7 +473,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                 <div className="flex justify-between pt-6 border-t border-border">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentStep('business')}
+                    onClick={() => setCurrentStep("business")}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -378,7 +481,11 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                   </Button>
                   <Button
                     onClick={generatePolicies}
-                    disabled={isGenerating || selectedPolicies.length === 0 || !businessData}
+                    disabled={
+                      isGenerating ||
+                      selectedPolicies.length === 0 ||
+                      !businessData
+                    }
                     className="bg-teal-accent hover:bg-teal-accent/90 text-background flex items-center gap-2"
                   >
                     {isGenerating ? (
@@ -398,25 +505,41 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                 {/* Existing Policies */}
                 {Array.isArray(savedPolicies) && savedPolicies.length > 0 && (
                   <div className="pt-6 border-t border-border">
-                    <h3 className="text-lg font-semibold mb-4 text-foreground">Previously Generated Policies</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground">
+                      Previously Generated Policies
+                    </h3>
                     <div className="space-y-4">
-                      {savedPolicies.map(policy => (
-                        <div key={policy.id} className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
+                      {savedPolicies.map((policy) => (
+                        <div
+                          key={policy.id}
+                          className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30"
+                        >
                           <div>
                             <h4 className="font-semibold text-foreground">
-                              {policyTypes.find(p => p.value === policy.policy_type)?.label || policy.policy_type}
+                              {policyTypes.find(
+                                (p) => p.value === policy.policy_type
+                              )?.label || policy.policy_type}
                             </h4>
                             <p className="text-sm text-muted-foreground">
-                              Generated on {new Date(policy.generated_at).toLocaleDateString()}
+                              Generated on{" "}
+                              {new Date(
+                                policy.generated_at
+                              ).toLocaleDateString()}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Compliance: {policy.compliance_regions?.join(', ')}
+                              Compliance:{" "}
+                              {policy.compliance_regions?.join(", ")}
                             </p>
                           </div>
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              onClick={() => downloadPolicy(policy.policy_type, policy.content)}
+                              onClick={() =>
+                                downloadPolicy(
+                                  policy.policy_type,
+                                  policy.content
+                                )
+                              }
                               className="bg-green-accent hover:bg-green-accent/90 text-background"
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -440,7 +563,7 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
             </Card>
           )}
 
-          {currentStep === 'view' && (
+          {currentStep === "view" && (
             <div className="space-y-6">
               <Card className="bg-card border-border">
                 <CardHeader>
@@ -449,12 +572,15 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                       <Eye className="w-5 h-5 text-teal-accent" />
                       Generated Policies
                       <Badge variant="secondary" className="ml-2">
-                        {Object.keys(generatedPolicies).length} {Object.keys(generatedPolicies).length === 1 ? 'Policy' : 'Policies'}
+                        {Object.keys(generatedPolicies).length}{" "}
+                        {Object.keys(generatedPolicies).length === 1
+                          ? "Policy"
+                          : "Policies"}
                       </Badge>
                     </CardTitle>
                     <Button
                       variant="outline"
-                      onClick={() => setCurrentStep('generate')}
+                      onClick={() => setCurrentStep("generate")}
                       className="flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
@@ -464,32 +590,35 @@ const PolicyGenerator: React.FC<PolicyGeneratorProps> = () => {
                 </CardHeader>
               </Card>
 
-              {Object.entries(generatedPolicies).map(([policyType, content]) => (
-                <Card key={policyType} className="bg-card border-border">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-2xl text-foreground flex items-center gap-2">
-                        <FileText className="w-6 h-6 text-teal-accent" />
-                        {policyTypes.find(p => p.value === policyType)?.label || policyType}
-                      </CardTitle>
-                      <Button
-                        onClick={() => downloadPolicy(policyType, content)}
-                        className="bg-teal-accent hover:bg-teal-accent/90 text-background"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-wrap text-sm bg-muted/30 text-foreground p-6 rounded-md border border-border max-h-96 overflow-y-auto font-mono leading-relaxed">
-                        {content}
+              {Object.entries(generatedPolicies).map(
+                ([policyType, content]) => (
+                  <Card key={policyType} className="bg-card border-border">
+                    <CardHeader>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-2xl text-foreground flex items-center gap-2">
+                          <FileText className="w-6 h-6 text-teal-accent" />
+                          {policyTypes.find((p) => p.value === policyType)
+                            ?.label || policyType}
+                        </CardTitle>
+                        <Button
+                          onClick={() => downloadPolicy(policyType, content)}
+                          className="bg-teal-accent hover:bg-teal-accent/90 text-background"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none">
+                        <div className="whitespace-pre-wrap text-sm bg-muted/30 text-foreground p-6 rounded-md border border-border max-h-96 overflow-y-auto font-mono leading-relaxed">
+                          {content}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              )}
             </div>
           )}
         </div>

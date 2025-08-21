@@ -1,19 +1,31 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { LogIn, Eye, EyeOff, Zap } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { LogIn, Eye, EyeOff, Zap } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -31,20 +43,20 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
   const form = useForm<LoginFormData>({
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    
+
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/login', {
-        method: 'POST',
+      const response = await fetch("https://nexora-2-0-6.onrender.com/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: data.email,
@@ -56,43 +68,46 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
       if (response.ok) {
         // Store token and user info
-        localStorage.setItem('nexora_token', result.token);
-        localStorage.setItem('nexora_user', JSON.stringify({
-          id: result.user.id,
-          email: result.user.email,
-          full_name: result.user.full_name,
-          loginTime: new Date().toISOString(),
-        }));
-        
+        localStorage.setItem("nexora_token", result.token);
+        localStorage.setItem(
+          "nexora_user",
+          JSON.stringify({
+            id: result.user.id,
+            email: result.user.email,
+            full_name: result.user.full_name,
+            loginTime: new Date().toISOString(),
+          })
+        );
+
         toast({
-          title: 'Login Successful',
-          description: 'Welcome back to Nexora!',
+          title: "Login Successful",
+          description: "Welcome back to Nexora!",
         });
-        
+
         onOpenChange(false);
-        setLocation('/dashboard');
+        setLocation("/dashboard");
       } else {
         toast({
-          title: 'Login Failed',
-          description: result.detail || 'Invalid credentials',
-          variant: 'destructive',
+          title: "Login Failed",
+          description: result.detail || "Invalid credentials",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       toast({
-        title: 'Login Failed',
-        description: 'Network error. Please try again.',
-        variant: 'destructive',
+        title: "Login Failed",
+        description: "Network error. Please try again.",
+        variant: "destructive",
       });
     }
-    
+
     setIsLoading(false);
   };
 
   const handleDemoLogin = () => {
-    form.setValue('email', 'demo@nexora.com');
-    form.setValue('password', 'demo123');
+    form.setValue("email", "demo@nexora.com");
+    form.setValue("password", "demo123");
     form.handleSubmit(onSubmit)();
   };
 
@@ -105,7 +120,9 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
               <Zap className="w-6 h-6 text-background" />
             </div>
           </div>
-          <DialogTitle className="text-2xl font-bold">Welcome to Nexora</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            Welcome to Nexora
+          </DialogTitle>
           <p className="text-muted-foreground">
             Sign in to access your MSME dashboard
           </p>
@@ -140,7 +157,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                   <FormControl>
                     <div className="relative">
                       <Input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         {...field}
                       />
@@ -163,10 +180,10 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 </FormItem>
               )}
             />
-          
+
             <div className="space-y-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-teal-accent to-green-accent hover:opacity-90"
                 disabled={isLoading}
               >
@@ -183,7 +200,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 )}
               </Button>
 
-              <Button 
+              <Button
                 type="button"
                 variant="outline"
                 className="w-full"
@@ -205,7 +222,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <Button variant="link" className="p-0 h-auto text-teal-accent">
             Sign up for free
           </Button>

@@ -1,6 +1,11 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Zap, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
@@ -15,6 +20,7 @@ export function Navigation() {
     { href: "/", label: "Home" },
     { href: "/dashboard", label: "Dashboard" },
     { href: "/policy-generator", label: "Policy Generator" },
+    { href: "/blockchain-loans", label: "Blockchain Loans" },
     { href: "/profile", label: "Profile" },
   ];
 
@@ -54,13 +60,16 @@ export function Navigation() {
             <span className="text-sm text-muted-foreground">
               Welcome, {user?.full_name}
             </span>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gradient-to-r from-orange-accent to-teal-accent text-background">
-                      {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                      {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -112,7 +121,11 @@ export function Navigation() {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 mt-4">
-                <Button variant="ghost" onClick={logout} className="justify-start">
+                <Button
+                  variant="ghost"
+                  onClick={logout}
+                  className="justify-start"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </Button>

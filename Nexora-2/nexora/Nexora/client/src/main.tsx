@@ -16,22 +16,25 @@ async function testBackendConnections() {
 
   // Test Credit Score API (POST /calculate-credit-score)
   try {
-    const creditRes = await fetch("https://nexora-2-0-6.onrender.com/calculate-credit-score", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        no_of_invoices: 10,
-        total_amount: 10000,
-        total_amount_pending: 3000,
-        total_amount_paid: 7000,
-        tax: 1000,
-        extra_charges: 200,
-        payment_completion_rate: 0.7,
-        paid_to_pending_ratio: 2.33,
-      }),
-    });
+    const creditRes = await fetch(
+      "https://nexora-2-0-6.onrender.com/calculate-credit-score",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          no_of_invoices: 10,
+          total_amount: 10000,
+          total_amount_pending: 3000,
+          total_amount_paid: 7000,
+          tax: 1000,
+          extra_charges: 200,
+          payment_completion_rate: 0.7,
+          paid_to_pending_ratio: 2.33,
+        }),
+      }
+    );
 
     if (!creditRes.ok) {
       throw new Error(`HTTP ${creditRes.status} - ${creditRes.statusText}`);

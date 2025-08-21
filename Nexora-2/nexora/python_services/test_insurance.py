@@ -19,7 +19,7 @@ def test_insurance_assessment():
     }
     
     try:
-        response = requests.post("http://localhost:8001/register", json=register_data)
+        response = requests.post("https://nexora-2-0-6.onrender.com/register", json=register_data)
         if response.status_code == 200:
             auth_data = response.json()
             token = auth_data.get("access_token")
@@ -27,7 +27,7 @@ def test_insurance_assessment():
         else:
             # Try login instead
             login_data = {"email": register_data["email"], "password": register_data["password"]}
-            response = requests.post("http://localhost:8001/login", json=login_data)
+            response = requests.post("https://nexora-2-0-6.onrender.com/login", json=login_data)
             if response.status_code == 200:
                 auth_data = response.json()
                 token = auth_data.get("access_token")
@@ -66,7 +66,7 @@ def test_insurance_assessment():
     }
     
     try:
-        response = requests.post("http://localhost:8001/insurance/assess", 
+        response = requests.post("https://nexora-2-0-6.onrender.com/insurance/assess", 
                                json=assessment_data, 
                                headers=headers)
         

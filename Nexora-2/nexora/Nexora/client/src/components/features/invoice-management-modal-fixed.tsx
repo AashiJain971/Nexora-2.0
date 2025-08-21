@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Eye, Download, Calendar, DollarSign, Building, TrendingUp } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  FileText,
+  Eye,
+  Download,
+  Calendar,
+  DollarSign,
+  Building,
+  TrendingUp,
+} from "lucide-react";
 
 interface Invoice {
   id: number;
@@ -35,7 +43,10 @@ interface InvoiceManagementModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagementModalProps) {
+export function InvoiceManagementModal({
+  open,
+  onOpenChange,
+}: InvoiceManagementModalProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -44,58 +55,69 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
 
   // Debugging: Log the current token being used
   useEffect(() => {
-    console.log('🔐 Current auth token for invoice management:', token?.substring(0, 20) + '...');
-    console.log('🔐 Full token for debugging (REMOVE IN PRODUCTION):', token);
+    console.log(
+      "🔐 Current auth token for invoice management:",
+      token?.substring(0, 20) + "..."
+    );
+    console.log("🔐 Full token for debugging (REMOVE IN PRODUCTION):", token);
   }, [token]);
 
-  const formatCurrency = (amount: number, currency: string = 'INR') =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "INR") =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
       currency: currency,
       maximumFractionDigits: 2,
     }).format(amount ?? 0);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
   const fetchInvoices = async () => {
     if (!token) {
-      console.log('⚠️ No token available for fetching invoices');
+      console.log("⚠️ No token available for fetching invoices");
       return;
     }
-    
+
     setLoading(true);
     try {
-      console.log('🔍 Fetching invoices with token:', token?.substring(0, 20) + '...');
-      console.log('🌐 Making request to: https://nexora-2-0-6.onrender.com/user/invoices');
-      
-      const response = await fetch('https://nexora-2-0-6.onrender.com/user/invoices', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log(
+        "🔍 Fetching invoices with token:",
+        token?.substring(0, 20) + "..."
+      );
+      console.log(
+        "🌐 Making request to: https://nexora-2-0-6.onrender.com/user/invoices"
+      );
 
-      console.log('📊 Response status:', response.status);
-      
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/user/invoices",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("📊 Response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Fetched invoices data:', data);
-        console.log('📊 Number of invoices found:', data.invoices?.length || 0);
-        console.log('📋 All invoices:', data.invoices);
-        
+        console.log("✅ Fetched invoices data:", data);
+        console.log("📊 Number of invoices found:", data.invoices?.length || 0);
+        console.log("📋 All invoices:", data.invoices);
+
         // Set ALL invoices to state for proper scrolling
         setInvoices(data.invoices || []);
-        
+
         // Enhanced debugging
-        console.log('📋 SETTING INVOICES STATE:', data.invoices?.length || 0);
-        console.log('📋 ALL INVOICE DETAILS:');
+        console.log("📋 SETTING INVOICES STATE:", data.invoices?.length || 0);
+        console.log("📋 ALL INVOICE DETAILS:");
         data.invoices?.forEach((invoice: any, index: number) => {
           console.log(`  Invoice ${index + 1}:`, {
             id: invoice.id,
@@ -103,40 +125,52 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
             client: invoice.client,
             amount: invoice.total_amount,
             date: invoice.date,
-            status: invoice.status
+            status: invoice.status,
           });
         });
-        
+
         // Additional debugging
         if (data.invoices && data.invoices.length > 0) {
-          console.log('📋 First invoice details:', data.invoices[0]);
-          console.log('📋 Last invoice details:', data.invoices[data.invoices.length - 1]);
+          console.log("📋 First invoice details:", data.invoices[0]);
+          console.log(
+            "📋 Last invoice details:",
+            data.invoices[data.invoices.length - 1]
+          );
         } else {
-          console.log('⚠️ No invoices found for current user');
+          console.log("⚠️ No invoices found for current user");
         }
 
         if (data.invoices?.length === 0) {
           toast({
-            title: 'No Invoices Found',
-            description: 'Upload your first invoice to start building your credibility history!',
+            title: "No Invoices Found",
+            description:
+              "Upload your first invoice to start building your credibility history!",
           });
         } else if (data.invoices?.length > 0) {
-          console.log(`✅ Successfully loaded ${data.invoices.length} invoices for display`);
+          console.log(
+            `✅ Successfully loaded ${data.invoices.length} invoices for display`
+          );
         }
       } else {
-        console.error('❌ Failed to fetch invoices - response not ok:', response.status, response.statusText);
+        console.error(
+          "❌ Failed to fetch invoices - response not ok:",
+          response.status,
+          response.statusText
+        );
         toast({
-          title: 'Failed to Load Invoices',
-          description: 'Could not retrieve your invoice history. Please try again.',
-          variant: 'destructive',
+          title: "Failed to Load Invoices",
+          description:
+            "Could not retrieve your invoice history. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('❌ Error fetching invoices:', error);
+      console.error("❌ Error fetching invoices:", error);
       toast({
-        title: 'Network Error',
-        description: 'Failed to load invoices. Please check your connection and try again.',
-        variant: 'destructive',
+        title: "Network Error",
+        description:
+          "Failed to load invoices. Please check your connection and try again.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -149,57 +183,68 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'paid':
+      case "paid":
         return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'overdue':
+      case "overdue":
         return <Badge className="bg-red-100 text-red-800">Overdue</Badge>;
       default:
-        return <Badge className="bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200">Processed</Badge>;
+        return (
+          <Badge className="bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200">
+            Processed
+          </Badge>
+        );
     }
   };
 
   const addSampleInvoices = async () => {
     if (!token) return;
-    
+
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/add-sample-invoices', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/add-sample-invoices",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         toast({
-          title: 'Sample Invoices Added',
+          title: "Sample Invoices Added",
           description: data.message,
-          variant: 'default',
+          variant: "default",
         });
         // Refresh the invoices list
         fetchInvoices();
       } else {
         toast({
-          title: 'Failed to Add Sample Invoices',
-          description: 'Could not add sample invoices. Please try again.',
-          variant: 'destructive',
+          title: "Failed to Add Sample Invoices",
+          description: "Could not add sample invoices. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error adding sample invoices:', error);
+      console.error("Error adding sample invoices:", error);
       toast({
-        title: 'Network Error',
-        description: 'Please try again.',
-        variant: 'destructive',
+        title: "Network Error",
+        description: "Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const totalInvoiceValue = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
-  const avgInvoiceValue = invoices.length > 0 ? totalInvoiceValue / invoices.length : 0;
+  const totalInvoiceValue = invoices.reduce(
+    (sum, inv) => sum + inv.total_amount,
+    0
+  );
+  const avgInvoiceValue =
+    invoices.length > 0 ? totalInvoiceValue / invoices.length : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -218,8 +263,9 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
             </button>
           </div>
           <p className="text-muted-foreground">
-            View your uploaded invoices that contribute to your credibility score. 
-            Each invoice adds to your payment history, financial stability analysis, and industry risk assessment.
+            View your uploaded invoices that contribute to your credibility
+            score. Each invoice adds to your payment history, financial
+            stability analysis, and industry risk assessment.
           </p>
         </DialogHeader>
 
@@ -235,10 +281,14 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
                 <FileText className="w-16 h-16 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Invoices Yet</h3>
                 <p className="text-muted-foreground mb-4 max-w-md">
-                  Start building your credibility history by uploading your first invoice. 
-                  Each invoice contributes to your credibility analysis.
+                  Start building your credibility history by uploading your
+                  first invoice. Each invoice contributes to your credibility
+                  analysis.
                 </p>
-                <Button onClick={() => onOpenChange(false)} className="bg-teal-accent hover:bg-teal-accent/90">
+                <Button
+                  onClick={() => onOpenChange(false)}
+                  className="bg-teal-accent hover:bg-teal-accent/90"
+                >
                   Upload Your First Invoice
                 </Button>
               </div>
@@ -250,28 +300,38 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
                     <div className="flex items-center gap-2">
                       <FileText className="w-5 h-5 text-teal-accent" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Invoices</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Invoices
+                        </p>
                         <p className="text-2xl font-bold">{invoices.length}</p>
                       </div>
                     </div>
                   </Card>
-                  
+
                   <Card className="p-4">
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-green-accent" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Value</p>
-                        <p className="text-2xl font-bold">{formatCurrency(totalInvoiceValue)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Value
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {formatCurrency(totalInvoiceValue)}
+                        </p>
                       </div>
                     </div>
                   </Card>
-                  
+
                   <Card className="p-4">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-orange-accent" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Avg Invoice</p>
-                        <p className="text-2xl font-bold">{formatCurrency(avgInvoiceValue)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Avg Invoice
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {formatCurrency(avgInvoiceValue)}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -286,10 +346,16 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
                         How Your Credibility Score is Calculated
                       </h4>
                       <p className="text-sm text-slate-700 dark:text-slate-200">
-                        Your credibility is analyzed based on: <strong>Payment Completion Rate (40%)</strong> - 
-                        consistency in invoice payments, <strong>Paid-to-Pending Ratio (30%)</strong> - cash flow management, 
-                        <strong>Tax Compliance (15%)</strong> - regulatory adherence, and <strong>Extra Charges Management (15%)</strong> - 
-                        operational efficiency. More invoices provide better analysis accuracy.
+                        Your credibility is analyzed based on:{" "}
+                        <strong>Payment Completion Rate (40%)</strong> -
+                        consistency in invoice payments,{" "}
+                        <strong>Paid-to-Pending Ratio (30%)</strong> - cash flow
+                        management,
+                        <strong>Tax Compliance (15%)</strong> - regulatory
+                        adherence, and{" "}
+                        <strong>Extra Charges Management (15%)</strong> -
+                        operational efficiency. More invoices provide better
+                        analysis accuracy.
                       </p>
                     </div>
                   </div>
@@ -297,64 +363,92 @@ export function InvoiceManagementModal({ open, onOpenChange }: InvoiceManagement
 
                 {/* Invoice List with Improved Scrolling */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">All Invoices ({invoices.length})</h3>
+                  <h3 className="text-lg font-semibold">
+                    All Invoices ({invoices.length})
+                  </h3>
                   <div className="min-h-[400px] max-h-[50vh] overflow-y-auto border rounded-lg p-4 space-y-4 bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-700">
                     {invoices.map((invoice, index) => (
-                      <Card key={`${invoice.id}-${index}`} className="p-4 hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600">
+                      <Card
+                        key={`${invoice.id}-${index}`}
+                        className="p-4 hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600"
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-lg">{invoice.invoice_number}</h4>
-                              {getStatusBadge(invoice.status || 'processed')}
+                              <h4 className="font-semibold text-lg">
+                                {invoice.invoice_number}
+                              </h4>
+                              {getStatusBadge(invoice.status || "processed")}
                             </div>
-                            
+
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div className="flex items-center gap-1">
                                 <Building className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">Client:</span>
-                                <span className="font-medium">{invoice.client}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">Date:</span>
-                                <span className="font-medium">{formatDate(invoice.date)}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">Amount:</span>
-                                <span className="font-medium text-green-600">
-                                  {formatCurrency(invoice.total_amount, invoice.currency)}
+                                <span className="text-muted-foreground">
+                                  Client:
+                                </span>
+                                <span className="font-medium">
+                                  {invoice.client}
                                 </span>
                               </div>
-                              
+
                               <div className="flex items-center gap-1">
-                                <span className="text-muted-foreground">Industry:</span>
-                                <span className="font-medium">{invoice.industry}</span>
+                                <Calendar className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  Date:
+                                </span>
+                                <span className="font-medium">
+                                  {formatDate(invoice.date)}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  Amount:
+                                </span>
+                                <span className="font-medium text-green-600">
+                                  {formatCurrency(
+                                    invoice.total_amount,
+                                    invoice.currency
+                                  )}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <span className="text-muted-foreground">
+                                  Industry:
+                                </span>
+                                <span className="font-medium">
+                                  {invoice.industry}
+                                </span>
                               </div>
                             </div>
-                            
+
                             <div className="mt-2 text-sm text-muted-foreground">
-                              <span>Payment Terms: {invoice.payment_terms}</span>
+                              <span>
+                                Payment Terms: {invoice.payment_terms}
+                              </span>
                               <span className="mx-2">•</span>
-                              <span>{invoice.line_items?.length || 0} line items</span>
+                              <span>
+                                {invoice.line_items?.length || 0} line items
+                              </span>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => setSelectedInvoice(invoice)}
                               className="flex items-center gap-1"
                             >
                               <Eye className="w-4 h-4" />
                               View
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="flex items-center gap-1"
                             >
                               <Download className="w-4 h-4" />

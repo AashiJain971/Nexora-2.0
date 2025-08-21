@@ -11,6 +11,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
 import PolicyGeneratorPage from "@/pages/policy-generator";
+import BlockchainLoansPage from "@/pages/blockchain-loans";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/profile" component={Profile} />
       <Route path="/policy-generator" component={PolicyGeneratorPage} />
+      <Route path="/blockchain-loans" component={BlockchainLoansPage} />
       <Route component={NotFound} />
     </Switch>
   );

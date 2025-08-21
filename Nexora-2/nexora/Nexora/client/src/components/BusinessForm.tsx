@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Checkbox } from './ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Checkbox } from "./ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface BusinessDetails {
   business_name: string;
@@ -31,24 +37,28 @@ interface BusinessFormProps {
   initialData?: BusinessDetails | null;
 }
 
-const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initialData }) => {
+const BusinessForm: React.FC<BusinessFormProps> = ({
+  onSubmit,
+  onCancel,
+  initialData,
+}) => {
   const { token } = useAuth();
   const [formData, setFormData] = useState<BusinessDetails>({
-    business_name: '',
-    business_type: 'retail',
-    industry: '',
-    location_country: 'India',
-    location_state: '',
-    location_city: '',
-    website_url: '',
+    business_name: "",
+    business_type: "retail",
+    industry: "",
+    location_country: "India",
+    location_state: "",
+    location_city: "",
+    website_url: "",
     has_online_presence: false,
     has_physical_store: false,
     collects_personal_data: true,
     processes_payments: false,
     uses_cookies: false,
     has_newsletter: false,
-    target_audience: 'B2C',
-    data_retention_period: 365
+    target_audience: "B2C",
+    data_retention_period: 365,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -68,12 +78,15 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
     if (!token) return;
 
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/get-business', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/get-business",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const result = await response.json();
@@ -81,49 +94,53 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
           // Map backend business data to frontend form structure
           const businessData = result.business;
           setFormData({
-            business_name: businessData.business_name || '',
-            business_type: 'retail',
-            industry: businessData.industry || '',
-            location_country: 'India',
-            location_state: '',
-            location_city: businessData.location || '',
-            website_url: '',
+            business_name: businessData.business_name || "",
+            business_type: "retail",
+            industry: businessData.industry || "",
+            location_country: "India",
+            location_state: "",
+            location_city: businessData.location || "",
+            website_url: "",
             has_online_presence: false,
             has_physical_store: false,
             collects_personal_data: true,
             processes_payments: false,
             uses_cookies: false,
             has_newsletter: false,
-            target_audience: 'B2C',
-            data_retention_period: 365
+            target_audience: "B2C",
+            data_retention_period: 365,
           });
         }
       }
     } catch (error) {
-      console.log('No existing business data found');
+      console.log("No existing business data found");
     } finally {
       setLoadingExisting(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
+
+    if (type === "checkbox") {
       const checkbox = e.target as HTMLInputElement;
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: checkbox.checked
+        [name]: checkbox.checked,
       }));
-    } else if (type === 'number') {
-      setFormData(prev => ({
+    } else if (type === "number") {
+      setFormData((prev) => ({
         ...prev,
-        [name]: parseInt(value) || 0
+        [name]: parseInt(value) || 0,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -133,25 +150,28 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://nexora-2-0-6.onrender.com/register-business', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await fetch(
+        "https://nexora-2-0-6.onrender.com/register-business",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const result = await response.json();
 
       if (response.ok && result.success) {
         onSubmit(formData);
       } else {
-        throw new Error(result.detail || 'Failed to save business details');
+        throw new Error(result.detail || "Failed to save business details");
       }
     } catch (error) {
-      console.error('Error saving business:', error);
-      alert('Failed to save business details. Please try again.');
+      console.error("Error saving business:", error);
+      alert("Failed to save business details. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -180,17 +200,21 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
         {/* Basic Business Information */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-foreground">Basic Business Information</CardTitle>
+            <CardTitle className="text-foreground">
+              Basic Business Information
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="business_name" className="text-foreground">Business Name *</Label>
+                <Label htmlFor="business_name" className="text-foreground">
+                  Business Name *
+                </Label>
                 <Input
                   id="business_name"
                   name="business_name"
                   type="text"
-                  value={formData?.business_name || ''}
+                  value={formData?.business_name || ""}
                   onChange={handleInputChange}
                   required
                   className="bg-background border-border text-foreground"
@@ -198,10 +222,14 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="business_type" className="text-foreground">Business Type *</Label>
-                <Select 
-                  value={formData?.business_type || 'retail'} 
-                  onValueChange={(value) => setFormData(prev => ({...prev, business_type: value}))}
+                <Label htmlFor="business_type" className="text-foreground">
+                  Business Type *
+                </Label>
+                <Select
+                  value={formData?.business_type || "retail"}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, business_type: value }))
+                  }
                 >
                   <SelectTrigger className="bg-background border-border text-foreground">
                     <SelectValue />
@@ -222,12 +250,14 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="industry" className="text-foreground">Industry *</Label>
+                <Label htmlFor="industry" className="text-foreground">
+                  Industry *
+                </Label>
                 <Input
                   id="industry"
                   name="industry"
                   type="text"
-                  value={formData?.industry || ''}
+                  value={formData?.industry || ""}
                   onChange={handleInputChange}
                   required
                   placeholder="e.g., Technology, Finance, Healthcare"
@@ -236,17 +266,25 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="target_audience" className="text-foreground">Target Audience *</Label>
-                <Select 
-                  value={formData?.target_audience || 'B2C'} 
-                  onValueChange={(value) => setFormData(prev => ({...prev, target_audience: value}))}
+                <Label htmlFor="target_audience" className="text-foreground">
+                  Target Audience *
+                </Label>
+                <Select
+                  value={formData?.target_audience || "B2C"}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, target_audience: value }))
+                  }
                 >
                   <SelectTrigger className="bg-background border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="B2C">Business to Consumer (B2C)</SelectItem>
-                    <SelectItem value="B2B">Business to Business (B2B)</SelectItem>
+                    <SelectItem value="B2C">
+                      Business to Consumer (B2C)
+                    </SelectItem>
+                    <SelectItem value="B2B">
+                      Business to Business (B2B)
+                    </SelectItem>
                     <SelectItem value="Both">Both B2B and B2C</SelectItem>
                   </SelectContent>
                 </Select>
@@ -263,12 +301,14 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="location_country" className="text-foreground">Country *</Label>
+                <Label htmlFor="location_country" className="text-foreground">
+                  Country *
+                </Label>
                 <Input
                   id="location_country"
                   name="location_country"
                   type="text"
-                  value={formData?.location_country || 'India'}
+                  value={formData?.location_country || "India"}
                   onChange={handleInputChange}
                   required
                   className="bg-background border-border text-foreground"
@@ -276,24 +316,28 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location_state" className="text-foreground">State/Province</Label>
+                <Label htmlFor="location_state" className="text-foreground">
+                  State/Province
+                </Label>
                 <Input
                   id="location_state"
                   name="location_state"
                   type="text"
-                  value={formData.location_state || ''}
+                  value={formData.location_state || ""}
                   onChange={handleInputChange}
                   className="bg-background border-border text-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location_city" className="text-foreground">City</Label>
+                <Label htmlFor="location_city" className="text-foreground">
+                  City
+                </Label>
                 <Input
                   id="location_city"
                   name="location_city"
                   type="text"
-                  value={formData.location_city || ''}
+                  value={formData.location_city || ""}
                   onChange={handleInputChange}
                   className="bg-background border-border text-foreground"
                 />
@@ -304,23 +348,31 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
 
         {/* Website Information */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Online Presence</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Online Presence
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Website URL</Label>
+              <Label className="text-sm font-medium text-muted-foreground">
+                Website URL
+              </Label>
               <Input
                 type="url"
                 name="website_url"
-                value={formData.website_url || ''}
+                value={formData.website_url || ""}
                 onChange={handleInputChange}
                 placeholder="https://example.com"
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground/60"
               />
-              <p className="text-xs text-muted-foreground">Include https://. Leave blank if none.</p>
+              <p className="text-xs text-muted-foreground">
+                Include https://. Leave blank if none.
+              </p>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Data Retention Period (days)</Label>
+              <Label className="text-sm font-medium text-muted-foreground">
+                Data Retention Period (days)
+              </Label>
               <Input
                 type="number"
                 name="data_retention_period"
@@ -330,24 +382,34 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
                 max={3650}
                 className="bg-background border-border text-foreground"
               />
-              <p className="text-xs text-muted-foreground">How long you keep user data (30 - 3650 days).</p>
+              <p className="text-xs text-muted-foreground">
+                How long you keep user data (30 - 3650 days).
+              </p>
             </div>
           </div>
         </div>
 
         {/* Business Features */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Business Features</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Business Features
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { id: 'has_online_presence', label: 'Has Online Presence (Website/App)' },
-              { id: 'has_physical_store', label: 'Has Physical Store/Office' },
-              { id: 'collects_personal_data', label: 'Collects Personal Data' },
-              { id: 'processes_payments', label: 'Processes Online Payments' },
-              { id: 'uses_cookies', label: 'Uses Cookies/Tracking' },
-              { id: 'has_newsletter', label: 'Sends Marketing/Newsletter' }
-            ].map(opt => (
-              <label key={opt.id} className="flex items-center space-x-2 rounded-md border border-border/60 bg-background px-3 py-2 hover:bg-accent/30 transition-colors cursor-pointer">
+              {
+                id: "has_online_presence",
+                label: "Has Online Presence (Website/App)",
+              },
+              { id: "has_physical_store", label: "Has Physical Store/Office" },
+              { id: "collects_personal_data", label: "Collects Personal Data" },
+              { id: "processes_payments", label: "Processes Online Payments" },
+              { id: "uses_cookies", label: "Uses Cookies/Tracking" },
+              { id: "has_newsletter", label: "Sends Marketing/Newsletter" },
+            ].map((opt) => (
+              <label
+                key={opt.id}
+                className="flex items-center space-x-2 rounded-md border border-border/60 bg-background px-3 py-2 hover:bg-accent/30 transition-colors cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   id={opt.id}
@@ -356,7 +418,9 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
                   onChange={handleInputChange}
                   className="h-4 w-4 rounded border-border text-teal-500 focus:ring-teal-500 focus:ring-offset-0 bg-background"
                 />
-                <span className="text-sm text-foreground leading-snug">{opt.label}</span>
+                <span className="text-sm text-foreground leading-snug">
+                  {opt.label}
+                </span>
               </label>
             ))}
           </div>
@@ -376,7 +440,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ onSubmit, onCancel, initial
             disabled={isLoading}
             className="px-6 py-2 rounded-md bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow hover:opacity-90 disabled:opacity-50 transition-colors"
           >
-            {isLoading ? 'Saving...' : 'Save Business Details'}
+            {isLoading ? "Saving..." : "Save Business Details"}
           </button>
         </div>
       </form>
