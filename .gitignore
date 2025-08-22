@@ -1,2 +1,4 @@
 nexora/python_services/.env
 nexora/python_services/.env
+**/.venv
+**/__pycache__/
